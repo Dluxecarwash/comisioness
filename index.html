@@ -1,0 +1,4074 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCM</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-database-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+:root{
+  --bg: #EDF2F0;
+  --surface: #FFFFFF;
+  --surface-2: #F4F8F6;
+  --surface-3: #E9F0ED;
+  --line: #D7E2DD;
+  --line-strong: #BECBC4;
+  --ink: #12251F;
+  --ink-dim: #5C6D66;
+  --ink-faint: #93A39B;
+  --primary: #0E7C86;
+  --primary-dark: #0A5D65;
+  --primary-light: #DEF0F0;
+  --accent: #A9761E;
+  --accent-light: #F4E9D3;
+  --ok: #1E8E5A;
+  --ok-light: #E1F3EA;
+  --danger: #B23A3A;
+  --danger-light: #FBE8E6;
+  --radius-lg: 22px;
+  --radius-md: 15px;
+  --radius-sm: 10px;
+  --shadow-sm: 0 1px 2px rgba(18,37,31,0.07);
+  --shadow-md: 0 10px 26px -10px rgba(18,37,31,0.16), 0 2px 6px rgba(18,37,31,0.06);
+  --shadow-lg: 0 26px 55px -18px rgba(18,37,31,0.26), 0 8px 18px rgba(18,37,31,0.08);
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(circle at 12% -6%, rgba(14,124,134,0.09), transparent 42%),
+    radial-gradient(circle at 100% 0%, rgba(169,118,30,0.06), transparent 40%),
+    var(--bg);
+  color:var(--ink);
+  font-family:var(--font-body);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+@media (prefers-reduced-motion: reduce){
+  *{transition:none !important; animation:none !important;}
+}
+
+.app{max-width:1120px;margin:0 auto;padding:30px 22px 90px;}
+
+/* ---------- HERO ---------- */
+header.hero{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  padding:26px 30px;
+  margin-bottom:18px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0)),
+    var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-md);
+  overflow:hidden;
+  perspective:900px;
+}
+header.hero::before{
+  content:"";
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size:26px 26px;
+  opacity:0.35;
+  -webkit-mask-image:radial-gradient(ellipse 70% 100% at 100% 0%, #000 0%, transparent 70%);
+  mask-image:radial-gradient(ellipse 70% 100% at 100% 0%, #000 0%, transparent 70%);
+  pointer-events:none;
+}
+.hero-title{display:flex;align-items:center;gap:16px;position:relative;z-index:1;}
+
+.hero-mark-3d{
+  width:58px;height:58px;flex-shrink:0;
+  position:relative;
+  transform-style:preserve-3d;
+  transform:rotateX(var(--rx,8deg)) rotateY(var(--ry,-8deg));
+  transition:transform .35s cubic-bezier(.2,.8,.2,1);
+}
+.hero-mark-layer{
+  position:absolute; inset:0;
+  border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+}
+.hero-mark-layer.base{
+  background:linear-gradient(155deg, #123A3E, var(--primary-dark));
+  transform:translateZ(-10px);
+  box-shadow:0 18px 30px -12px rgba(10,93,101,0.55);
+}
+.hero-mark-layer.mid{
+  background:linear-gradient(155deg, var(--primary) 0%, var(--primary-dark) 100%);
+  transform:translateZ(2px);
+}
+.hero-mark-layer.top{
+  transform:translateZ(16px);
+}
+.hero-mark-layer.top svg{width:28px;height:28px;}
+
+h1{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:30px;
+  letter-spacing:0.2px;
+  margin:0;
+  line-height:1.05;
+  color:var(--ink);
+}
+.hero-sub{color:var(--ink-dim);font-size:13px;margin-top:5px;}
+.hero-status{
+  font-family:var(--font-mono);font-size:11.5px;color:var(--ink-dim);
+  text-align:right;position:relative;z-index:1;
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:8px 14px;
+  white-space:nowrap;
+}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;position:relative;top:-1px;}
+.dot.on{background:var(--ok);box-shadow:0 0 0 3px var(--ok-light);}
+.dot.off{background:var(--danger);box-shadow:0 0 0 3px var(--danger-light);}
+
+/* ---------- TABS ---------- */
+nav.tabs{
+  display:flex;
+  gap:6px;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:7px;
+  margin-bottom:22px;
+  box-shadow:var(--shadow-sm);
+}
+nav.tabs button{
+  flex:1;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  background:transparent;
+  border:none;
+  color:var(--ink-dim);
+  font-family:var(--font-display);
+  font-size:16px;
+  letter-spacing:0.4px;
+  padding:12px 8px;
+  border-radius:11px;
+  cursor:pointer;
+  transition:all .18s ease;
+}
+nav.tabs button svg{width:16px;height:16px;opacity:0.75;}
+nav.tabs button:hover{color:var(--ink);background:var(--surface-2);}
+nav.tabs button.active{
+  background:linear-gradient(155deg, var(--primary), var(--primary-dark));
+  color:#fff;
+  box-shadow:0 8px 18px -6px rgba(10,93,101,0.45);
+}
+nav.tabs button.active svg{opacity:1;}
+nav.tabs button .ico-lock{transition:opacity .18s ease;}
+nav.tabs button.unlocked .ico-lock{display:none;}
+
+/* ---------- Celdas editadas ---------- */
+table.conc tbody td.cell-edited{color:var(--danger) !important; font-weight:600;}
+
+/* ---------- Barra de filtros ---------- */
+.filtros-bar{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:end;
+  gap:14px;
+  margin-bottom:16px;
+  padding:14px 16px;
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  border-radius:var(--radius-md);
+}
+.filtro-campo{display:flex; flex-direction:column; gap:5px; min-width:170px;}
+.filtro-campo label{
+  font-size:11px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.4px;
+  color:var(--ink-dim);
+}
+.filtro-campo select{
+  padding:8px 10px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--line-strong);
+  background:var(--surface);
+  font-family:var(--font-body);
+  font-size:13.5px;
+  color:var(--ink);
+  outline:none;
+}
+.filtro-campo select:focus{border-color:var(--primary);}
+
+/* ---------- Selector múltiple de Sucursal PDF ---------- */
+.msel{position:relative; min-width:220px;}
+.msel-btn{
+  width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px;
+  padding:8px 10px; border-radius:var(--radius-sm);
+  border:1px solid var(--line-strong); background:var(--surface);
+  font-family:var(--font-body); font-size:13.5px; color:var(--ink);
+  cursor:pointer; text-align:left; outline:none;
+}
+.msel-btn:focus,.msel.open .msel-btn{border-color:var(--primary);}
+.msel-btn .msel-txt{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;}
+.msel-btn .msel-caret{width:12px; height:12px; flex:none; color:var(--ink-dim); transition:transform .15s ease;}
+.msel.open .msel-caret{transform:rotate(180deg);}
+.msel.has-sel .msel-btn{border-color:var(--primary); background:var(--primary-light);}
+.msel-panel{
+  display:none; position:absolute; top:calc(100% + 4px); left:0; z-index:60;
+  min-width:100%; width:max-content; max-width:340px;
+  background:var(--surface); border:1px solid var(--line-strong);
+  border-radius:var(--radius-sm); box-shadow:var(--shadow-lg); padding:8px;
+}
+.msel.open .msel-panel{display:block;}
+.msel-search{
+  width:100%; padding:7px 9px; margin-bottom:6px; border-radius:8px;
+  border:1px solid var(--line-strong); font-family:var(--font-body); font-size:13px;
+  color:var(--ink); background:var(--surface); outline:none;
+}
+.msel-search:focus{border-color:var(--primary);}
+.msel-actions{display:flex; gap:6px; margin-bottom:6px;}
+.msel-actions button{
+  flex:1; padding:5px 8px; border-radius:8px; border:1px solid var(--line-strong);
+  background:var(--surface-2); color:var(--ink-dim); font-family:var(--font-body);
+  font-size:11.5px; font-weight:600; cursor:pointer;
+}
+.msel-actions button:hover{border-color:var(--primary); color:var(--primary-dark);}
+.msel-list{max-height:220px; overflow-y:auto;}
+.msel-opt{
+  display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:8px;
+  font-size:13px; color:var(--ink); cursor:pointer; user-select:none;
+}
+.msel-opt:hover{background:var(--surface-3);}
+.msel-opt input{accent-color:var(--primary); margin:0; cursor:pointer;}
+.msel-empty{padding:8px; font-size:12.5px; color:var(--ink-faint);}
+.filtro-limpiar{
+  padding:9px 16px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--line-strong);
+  background:var(--surface);
+  color:var(--ink-dim);
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:13px;
+  cursor:pointer;
+  transition:background .15s ease;
+}
+.filtro-limpiar:hover{background:var(--surface-3); color:var(--ink);}
+
+section.view{display:none;animation:fade .3s ease;}
+section.view.active{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+/* ---------- BENTO GRID BASE ---------- */
+.bento-grid{display:grid;gap:16px;perspective:1400px;}
+.bento{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm);
+  padding:20px;
+  transform-style:preserve-3d;
+  transition:transform .12s ease, box-shadow .25s ease, border-color .25s ease;
+  will-change:transform;
+}
+.bento:hover{box-shadow:var(--shadow-lg);border-color:var(--line-strong);}
+.bento-wide{
+  grid-column:1 / -1;
+}
+.bento-accent{
+  background:linear-gradient(155deg, var(--primary-light), var(--surface) 60%);
+}
+.bento h2{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:16px;
+  letter-spacing:0.3px;
+  color:var(--ink);
+  margin:0 0 4px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+.bento h2 .ico{
+  width:30px;height:30px;flex-shrink:0;
+  border-radius:9px;
+  background:var(--primary-light);
+  color:var(--primary-dark);
+  display:flex;align-items:center;justify-content:center;
+  transform:translateZ(10px);
+}
+.bento h2 .ico svg{width:16px;height:16px;}
+.bento .help{font-size:12.5px;color:var(--ink-dim);margin:0 0 14px;line-height:1.55;}
+
+/* intro strip */
+.intro-strip{
+  display:flex; align-items:center; gap:16px;
+  padding:18px 22px;
+}
+.intro-strip .ico-big{
+  width:44px;height:44px;flex-shrink:0;border-radius:12px;
+  background:linear-gradient(155deg, var(--accent-light), var(--surface-2));
+  color:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  transform:translateZ(14px);
+}
+.intro-strip .ico-big svg{width:22px;height:22px;}
+.intro-strip p{margin:0;font-size:13px;color:var(--ink-dim);line-height:1.6;}
+.intro-strip strong{color:var(--ink);}
+
+/* particiones grid */
+.grid-particiones{grid-template-columns:repeat(3,1fr);}
+@media(max-width:820px){.grid-particiones{grid-template-columns:1fr;}}
+
+/* ---- Interruptor activar/desactivar tabla ---- */
+.toggle-row{display:flex; align-items:center; justify-content:space-between; gap:14px; margin-top:6px; padding:14px 16px; background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius-md);}
+.toggle-row .toggle-label{font-weight:600; font-size:14.5px; color:var(--ink);}
+.toggle-row .toggle-state{font-size:12.5px; color:var(--ink-dim); margin-top:2px;}
+.switch{position:relative; display:inline-block; width:50px; height:28px; flex:0 0 auto;}
+.switch input{opacity:0; width:0; height:0;}
+.switch .slider{position:absolute; cursor:pointer; inset:0; background:var(--line-strong); border-radius:999px; transition:background .2s ease;}
+.switch .slider::before{content:""; position:absolute; height:22px; width:22px; left:3px; top:3px; background:#fff; border-radius:50%; box-shadow:var(--shadow-sm); transition:transform .2s ease;}
+.switch input:checked + .slider{background:var(--primary);}
+.switch input:checked + .slider::before{transform:translateX(22px);}
+.switch input:focus-visible + .slider{outline:2px solid var(--primary); outline-offset:2px;}
+
+.row-add{display:flex;gap:8px;margin-bottom:12px;}
+input[type=text], input[type=date], select{
+  width:100%;
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  color:var(--ink);
+  border-radius:9px;
+  padding:11px 12px;
+  font-family:var(--font-body);
+  font-size:14px;
+  outline:none;
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+input[type=text]:focus, input[type=date]:focus, select:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px var(--primary-light);
+}
+input[type=text]::placeholder{color:var(--ink-faint);}
+
+button.add{
+  background:linear-gradient(155deg, var(--primary), var(--primary-dark));
+  color:#fff;
+  border:none;
+  border-radius:9px;
+  padding:0 18px;
+  font-weight:600;
+  font-size:13px;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:filter .15s ease, transform .08s ease;
+}
+button.add:hover{filter:brightness(1.06);}
+button.add:active{transform:scale(0.97);}
+
+button.btn-export{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  background:var(--surface);
+  color:var(--primary-dark);
+  border:1px solid var(--line-strong);
+  border-radius:9px;
+  padding:9px 15px;
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:13px;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:background .15s ease, transform .08s ease;
+}
+button.btn-export svg{width:15px;height:15px;flex-shrink:0;}
+button.btn-export:hover{background:var(--primary-light);}
+button.btn-export:active{transform:scale(0.97);}
+.table-toolbar{display:flex;justify-content:flex-end;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+
+button.btn-danger{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  background:var(--danger-light);
+  color:var(--danger);
+  border:1px solid var(--danger);
+  border-radius:9px;
+  padding:9px 15px;
+  font-family:var(--font-body);
+  font-weight:700;
+  font-size:13px;
+  letter-spacing:0.3px;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:background .15s ease, color .15s ease, transform .08s ease;
+}
+button.btn-danger svg{width:15px;height:15px;flex-shrink:0;}
+button.btn-danger:hover{background:var(--danger);color:#fff;}
+button.btn-danger:active{transform:scale(0.97);}
+
+ul.chips{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;}
+ul.chips li{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  border-radius:9px;
+  padding:9px 11px;
+  font-size:13.5px;
+}
+ul.chips li .lbl{font-family:var(--font-mono);color:var(--ink);}
+ul.chips li button.del{
+  background:transparent;border:none;color:var(--danger);
+  cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;
+  opacity:0.6;
+}
+ul.chips li button.del:hover{opacity:1;}
+.empty-hint{color:var(--ink-faint);font-size:12.5px;font-style:italic;padding:6px 2px;}
+
+/* reglas de comisión (Código/Precio/Meta) */
+.row-add-3{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.row-add-3 input{flex:1 1 100px;min-width:90px;}
+.reglas-err{color:var(--danger);font-size:12px;margin:-4px 0 10px;min-height:14px;}
+.chip-regla-info{display:flex;flex-direction:column;gap:3px;}
+.chip-regla-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.chip-regla-sub{font-size:11px;color:var(--ink-dim);font-family:var(--font-mono);}
+.badge-combo{
+  background:var(--accent-light);color:var(--accent);
+  font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;
+  padding:2px 7px;border-radius:20px;font-family:var(--font-body);
+}
+
+/* ---------- SUBIR PDF ---------- */
+.grid-subir{grid-template-columns:1.35fr 1fr;align-items:start;}
+@media(max-width:820px){.grid-subir{grid-template-columns:1fr;}}
+
+.field{margin-bottom:16px;}
+.field label{
+  display:block;font-size:11.5px;text-transform:uppercase;
+  letter-spacing:0.6px;color:var(--ink-dim);margin-bottom:6px;
+  font-family:var(--font-display);font-weight:600;
+}
+.dropzone{
+  border:1.5px dashed var(--line-strong);
+  border-radius:var(--radius-sm);
+  padding:28px 14px;
+  text-align:center;
+  cursor:pointer;
+  transition:all .18s ease;
+  background:var(--surface-2);
+}
+.dropzone:hover, .dropzone.drag{border-color:var(--primary);background:var(--primary-light);}
+.dropzone .fname{color:var(--primary-dark);font-family:var(--font-mono);font-size:13px;margin-top:6px;}
+.dropzone svg{width:26px;height:26px;color:var(--ink-dim);margin-bottom:8px;}
+.dropzone .dz-main{font-size:13.5px;color:var(--ink);}
+.dropzone .dz-sub{font-size:11.5px;color:var(--ink-dim);margin-top:2px;}
+
+button.submit-btn{
+  width:100%;
+  background:linear-gradient(155deg, var(--accent), #8C5E14);
+  color:#fff;
+  border:none;
+  border-radius:var(--radius-sm);
+  padding:14px;
+  font-family:var(--font-display);
+  font-size:16px;
+  letter-spacing:0.5px;
+  font-weight:700;
+  cursor:pointer;
+  margin-top:6px;
+  box-shadow:0 10px 20px -8px rgba(169,118,30,0.5);
+  transition:filter .15s ease, transform .05s ease;
+}
+button.submit-btn:hover:not(:disabled){filter:brightness(1.05);}
+button.submit-btn:active:not(:disabled){transform:scale(0.995);}
+button.submit-btn:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none;}
+
+.msg{
+  margin-top:12px;padding:11px 13px;border-radius:9px;font-size:13px;
+  display:none;
+}
+.msg.show{display:block;}
+.msg.ok{background:var(--ok-light);border:1px solid #B9E4CC;color:#166B44;}
+.msg.err{background:var(--danger-light);border:1px solid #EFC2BE;color:var(--danger);}
+.msg.info{background:var(--primary-light);border:1px solid #BFE0E1;color:var(--primary-dark);}
+
+.steps-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;}
+.steps-list li{display:flex;gap:12px;align-items:flex-start;}
+.steps-list .num{
+  font-family:var(--font-display);font-weight:700;font-size:13px;
+  width:24px;height:24px;border-radius:7px;flex-shrink:0;
+  background:var(--surface-3);color:var(--primary-dark);
+  display:flex;align-items:center;justify-content:center;
+}
+.steps-list .txt{font-size:12.8px;color:var(--ink-dim);line-height:1.55;padding-top:2px;}
+.steps-list .txt strong{color:var(--ink);}
+
+/* ---------- CONCENTRADO ---------- */
+.grid-stats{grid-template-columns:repeat(2,1fr);}
+@media(max-width:820px){.grid-stats{grid-template-columns:1fr;}}
+.grid-concentrado{grid-template-columns:1fr;}
+.meta-si{color:var(--ok);font-weight:600;}
+.meta-no{color:var(--danger);font-weight:600;}
+tr.combo-sep td{
+  background:var(--accent-light);
+  border-left:3px solid var(--accent);
+  font-family:var(--font-display);
+  text-transform:uppercase;
+  font-size:10.5px;
+  letter-spacing:0.6px;
+  color:var(--accent);
+  font-weight:700;
+  padding:6px 10px 6px 13px;
+}
+tr.combo-row td{background:var(--surface-2);border-left:3px solid var(--accent-light);}
+table.conc td.combo-merge{vertical-align:middle;background:var(--surface-3);border-left:3px solid var(--accent-light);}
+
+/* ---- Pago de comisiones: estructura por usuario ---- */
+table.pago-tabla{table-layout:fixed;}
+table.pago-tabla .col-usuario{width:14%;}
+table.pago-tabla .col-cod{width:7%;}
+table.pago-tabla .col-desc{width:23%;}
+table.pago-tabla .col-ctd{width:8%;}
+table.pago-tabla .col-precio{width:13%;}
+table.pago-tabla .col-suma{width:7%;}
+table.pago-tabla .col-monto{width:14%;}
+table.pago-tabla .col-meta{width:14%;}
+/* Tablas con columnas PDF: anchos fijos en px para que cada columna tenga su propio espacio;
+   si la pantalla es angosta, el contenedor (.table-wrap) se desplaza horizontalmente. */
+table.pago-tabla.con-pdf{table-layout:fixed;width:100%;min-width:1240px;}
+table.pago-tabla.con-pdf col:nth-child(1){width:110px;}  /* Fecha PDF */
+table.pago-tabla.con-pdf col:nth-child(2){width:140px;}  /* Sucursal PDF */
+table.pago-tabla.con-pdf col:nth-child(3){width:130px;}  /* Usuario PDF */
+table.pago-tabla.con-pdf col:nth-child(4){width:130px;}  /* Usuario */
+table.pago-tabla.con-pdf col:nth-child(5){width:80px;}   /* Cod */
+table.pago-tabla.con-pdf col:nth-child(6){width:210px;}  /* Descripción */
+table.pago-tabla.con-pdf col:nth-child(7){width:70px;}   /* Ctd */
+table.pago-tabla.con-pdf col:nth-child(8){width:120px;}  /* Precio unitario */
+table.pago-tabla.con-pdf col:nth-child(9){width:70px;}   /* Σ */
+table.pago-tabla.con-pdf col:nth-child(10){width:110px;} /* Monto */
+table.pago-tabla.con-pdf col:nth-child(11){width:80px;}  /* Meta */
+table.pago-tabla.con-pdf thead th{white-space:nowrap;padding-left:10px;padding-right:10px;}
+table.pago-tabla.con-pdf thead th.num{text-align:right;}
+table.pago-tabla.con-pdf td{overflow:hidden;vertical-align:middle;}
+table.pago-tabla.con-pdf td.pdf-cell{font-size:12.5px;white-space:normal;overflow-wrap:break-word;word-break:normal;}
+/* Tabla META: columnas PDF con ancho propio; el contenedor se desplaza si no cabe. */
+table.meta-detalle thead th{white-space:nowrap;}
+table.meta-detalle thead th.num{text-align:right;}
+table.meta-detalle .pdf-fecha{min-width:110px;width:110px;}
+table.meta-detalle .pdf-suc{min-width:140px;width:140px;}
+table.meta-detalle .pdf-usr{min-width:130px;width:130px;}
+table.meta-detalle td.pdf-cell{font-size:12.5px;white-space:nowrap;}
+table.pago-tabla td.truncate{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+tr.usuario-header td{
+  background:linear-gradient(155deg, var(--primary-light), var(--surface-3));
+  border-top:2px solid var(--line-strong);
+  border-bottom:1px solid var(--line);
+  padding:9px 12px;
+}
+.usuario-header-inner{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.usuario-header-name{
+  font-family:var(--font-display);font-weight:700;font-size:13px;
+  letter-spacing:0.3px;color:var(--primary-dark);text-transform:uppercase;
+  display:flex;align-items:center;gap:8px;
+}
+.usuario-header-name .ico-user{
+  width:21px;height:21px;border-radius:7px;background:var(--surface);
+  display:flex;align-items:center;justify-content:center;color:var(--primary-dark);flex-shrink:0;
+}
+.usuario-header-name .ico-user svg{width:11px;height:11px;}
+.usuario-header-sub{font-family:var(--font-mono);font-size:12px;color:var(--accent);font-weight:700;white-space:nowrap;}
+
+tr.simple-row.row-alt td{background:var(--surface-2);}
+
+.meta-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:3px 11px;border-radius:20px;font-size:11px;font-weight:700;
+  letter-spacing:0.3px;white-space:nowrap;
+}
+.meta-badge.si{background:var(--ok-light);color:#166B44;}
+.meta-badge.no{background:var(--danger-light);color:var(--danger);}
+.pago-total-card{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:14px;padding:16px 18px;
+  background:var(--surface-3);border-radius:var(--radius-md);border:1px solid var(--line);
+}
+.pago-total-card .stat-label{
+  font-family:var(--font-display);text-transform:uppercase;font-size:12px;
+  letter-spacing:0.6px;color:var(--ink-dim);
+}
+.pago-total-card .stat-value{
+  font-family:var(--font-mono);font-size:22px;font-weight:500;color:var(--accent);
+}
+.stat-card{
+  display:flex;flex-direction:column;gap:6px;
+  padding:20px 22px;
+}
+.stat-card .stat-label{
+  font-family:var(--font-display);text-transform:uppercase;font-size:12px;
+  letter-spacing:0.6px;color:var(--ink-dim);display:flex;align-items:center;gap:8px;
+}
+.stat-card .stat-label .ico{
+  width:26px;height:26px;border-radius:8px;
+  background:var(--surface-3);color:var(--primary-dark);
+  display:flex;align-items:center;justify-content:center;
+  transform:translateZ(10px);
+}
+.stat-card .stat-label .ico svg{width:14px;height:14px;}
+.stat-card .stat-value{
+  font-family:var(--font-mono);font-size:26px;font-weight:500;color:var(--ink);
+  transform:translateZ(6px);
+}
+.stat-card.money .stat-value{color:var(--accent);}
+
+table.conc{width:100%;border-collapse:collapse;font-size:13.5px;}
+table.conc thead th{
+  text-align:left;
+  font-family:var(--font-display);
+  text-transform:uppercase;
+  font-size:11.5px;
+  letter-spacing:0.5px;
+  color:var(--ink-dim);
+  padding:11px 10px;
+  border-bottom:1px solid var(--line);
+  position:sticky;top:0;background:var(--surface);
+}
+table.conc tbody td{
+  padding:10px;
+  border-bottom:1px solid var(--line);
+  color:var(--ink);
+}
+table.conc tbody tr:hover{background:var(--surface-2);}
+table.conc td.num{font-family:var(--font-mono);text-align:right;}
+table.conc td.code{font-family:var(--font-mono);color:var(--primary-dark);font-weight:600;}
+.table-wrap{overflow-x:auto;max-height:520px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--radius-md);}
+.row-action{
+  display:inline-flex;align-items:center;gap:5px;
+  background:transparent;
+  cursor:pointer;
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:12px;
+  border-radius:7px;
+  padding:5px 9px;
+  white-space:nowrap;
+  transition:background .15s ease;
+}
+.row-action.del{color:var(--danger);border:1px solid var(--danger);}
+.row-action.del:hover{background:var(--danger-light);}
+.row-action.edit{color:var(--primary-dark);border:1px solid var(--primary);}
+.row-action.edit:hover{background:var(--primary-light);}
+.row-action svg{width:13px;height:13px;flex-shrink:0;}
+.pdf-link{
+  display:inline-flex;align-items:center;gap:5px;
+  color:var(--primary-dark);
+  text-decoration:none;
+  font-family:var(--font-mono);
+  font-size:12px;
+  border:1px solid var(--primary);
+  border-radius:7px;
+  padding:5px 9px;
+  transition:background .15s ease;
+  white-space:nowrap;
+}
+.pdf-link:hover{background:var(--primary-light);}
+.pdf-link svg{width:13px;height:13px;flex-shrink:0;}
+.pdf-pending{color:var(--ink-faint);font-size:12px;font-style:italic;}
+
+/* ---------- Fila duplicada autorizada ---------- */
+table.conc tbody tr.dup-row td{color:var(--danger) !important;}
+table.conc tbody tr.dup-row td.code{color:var(--danger) !important;}
+table.conc tbody tr.dup-row:hover{background:var(--danger-light);}
+
+/* ---------- Modal Autorizar ---------- */
+.auth-overlay{
+  position:fixed; inset:0;
+  background:rgba(18,37,31,0.45);
+  display:none;
+  align-items:center; justify-content:center;
+  z-index:999;
+  padding:20px;
+}
+.auth-overlay.show{display:flex;}
+.auth-modal{
+  background:var(--surface);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  border:1px solid var(--line);
+  width:100%; max-width:380px;
+  padding:26px 26px 22px;
+}
+.auth-modal h3{
+  margin:0 0 8px;
+  font-family:var(--font-display);
+  font-size:24px;
+  letter-spacing:0.3px;
+  color:var(--ink);
+}
+.auth-desc{margin:0 0 16px; font-size:13.5px; color:var(--ink-dim); line-height:1.5;}
+.auth-input{
+  width:100%;
+  padding:10px 12px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--line-strong);
+  font-family:var(--font-body);
+  font-size:14px;
+  color:var(--ink);
+  outline:none;
+  box-sizing:border-box;
+}
+.auth-input:focus{border-color:var(--primary);}
+.auth-err{
+  min-height:18px;
+  margin-top:8px;
+  font-size:12.5px;
+  color:var(--danger);
+  font-weight:600;
+}
+.auth-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:10px;
+}
+.auth-cancel, .auth-accept{
+  padding:9px 18px;
+  border-radius:var(--radius-sm);
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:13.5px;
+  cursor:pointer;
+  border:1px solid transparent;
+}
+.auth-cancel{
+  background:var(--surface-2);
+  border-color:var(--line);
+  color:var(--ink-dim);
+}
+.auth-cancel:hover{background:var(--surface-3);}
+.auth-accept{
+  background:var(--primary);
+  color:#fff;
+}
+.auth-accept:hover{background:var(--primary-dark);}
+
+/* ---------- Modal Editar registro ---------- */
+.edit-overlay{
+  position:fixed; inset:0;
+  background:rgba(18,37,31,0.45);
+  display:none;
+  align-items:center; justify-content:center;
+  z-index:999;
+  padding:20px;
+}
+.edit-overlay.show{display:flex;}
+.edit-modal{
+  background:var(--surface);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  border:1px solid var(--line);
+  width:100%; max-width:440px;
+  max-height:88vh;
+  overflow-y:auto;
+  padding:26px 26px 22px;
+}
+.edit-modal h3{
+  margin:0 0 16px;
+  font-family:var(--font-display);
+  font-size:24px;
+  letter-spacing:0.3px;
+  color:var(--ink);
+}
+.field-edit{margin-bottom:12px;}
+.field-edit label{
+  display:block;
+  font-size:11.5px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.4px;
+  color:var(--ink-dim);
+  margin-bottom:5px;
+}
+.field-edit input{
+  width:100%;
+  padding:9px 12px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--line-strong);
+  font-family:var(--font-body);
+  font-size:14px;
+  color:var(--ink);
+  outline:none;
+  box-sizing:border-box;
+}
+.field-edit input:focus{border-color:var(--primary);}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="hero" id="heroBox">
+    <div class="hero-title">
+      <div class="hero-mark-3d" id="heroMark">
+        <div class="hero-mark-layer base"></div>
+        <div class="hero-mark-layer mid"></div>
+        <div class="hero-mark-layer top">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 16c0-4 3-4 3-8 2 2 2 4 2 4s2-4 5-4c0 4 3 4 3 8" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 19h18" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div>
+        <h1>SCM</h1>
+        <div class="hero-sub">SERVICIOS COMISIONABLES</div>
+      </div>
+    </div>
+    <div class="hero-status"><span class="dot off" id="fbDot"></span><span id="fbStatus">Conectando a la base de datos…</span></div>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="particiones" id="tabConfiguracion">
+      <svg class="ico-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      Configuración
+    </button>
+    <button class="active" data-tab="subir">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+      Subir PDF
+    </button>
+    <button data-tab="concentrado">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9.5h17M8 4v16"/></svg>
+      Concentrado
+    </button>
+  </nav>
+
+  <!-- ================= CONFIGURACIÓN (antes "Particiones") ================= -->
+  <section class="view" id="view-particiones">
+    <div class="bento-grid grid-particiones" style="grid-template-columns:1fr; margin-bottom:16px;">
+      <div class="bento bento-wide bento-accent intro-strip">
+        <div class="ico-big"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <p><strong>Configuración:</strong> configura aquí los valores que reutilizarás al subir un PDF. Guarda el código de renglón que quieres extraer, y el catálogo de usuarios que aparecerán como opciones.</p>
+      </div>
+    </div>
+
+    <div class="bento-grid grid-particiones">
+
+      <div class="bento">
+        <h2><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 7h.01M3 11 11 3h7a2 2 0 0 1 2 2v7l-8 8-8-8Z"/></svg></span>Parámetro</h2>
+        <p class="help">Define las descripciones de meta y los autos por servicio comisionable.</p>
+        <div class="row-add-3">
+          <input type="text" id="inParamDescripcion" placeholder="Descripción. Ej. META 2 A 1">
+          <input type="text" id="inParamAutos" placeholder="Autos por servicio. Ej. 2">
+          <input type="text" id="inParamPrecio" placeholder="Precio. Ej. 60.00">
+        </div>
+        <button class="add" style="width:100%;margin-bottom:6px;" onclick="agregarParametro()">Agregar</button>
+        <div class="reglas-err" id="paramErr"></div>
+        <ul class="chips" id="listParametros"></ul>
+      </div>
+
+      <div class="bento">
+        <h2><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 7h.01M3 11 11 3h7a2 2 0 0 1 2 2v7l-8 8-8-8Z"/></svg></span>Código meta</h2>
+        <p class="help">Escribe el codigo a extraer con su precio base y precio fijo (opcional).</p>
+        <div class="row-add-3">
+          <input type="text" id="inCodigoMeta" placeholder="Cod. Ej. 51">
+          <input type="text" id="inPrecioBaseMeta" placeholder="Precio BASE. Ej. 8.00">
+          <input type="text" id="inPrecioFijoMeta" placeholder="Precio FIJO (opcional)">
+        </div>
+        <button class="add" style="width:100%;margin-bottom:6px;" onclick="agregarCodigoMeta()">Agregar</button>
+        <div class="reglas-err" id="codigoMetaErr"></div>
+        <ul class="chips" id="listCodigosMeta"></ul>
+      </div>
+
+      <div class="bento">
+        <h2><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 7h.01M3 11 11 3h7a2 2 0 0 1 2 2v7l-8 8-8-8Z"/></svg></span>Código a extraer</h2>
+        <p class="help">Escribe el codigo a extraer.</p>
+        <div class="row-add-3">
+          <input type="text" id="inCodigo" placeholder="Cod. Ej. 10 o 5,8,14">
+          <input type="text" id="inPrecio" placeholder="Precio unitario. Ej. 60.00">
+          <input type="text" id="inMeta" placeholder="Meta. Ej. 0">
+          <input type="text" id="inPrecioMenor" placeholder="Precio unitario <. Ej. 20.00 (opcional)">
+        </div>
+        <button class="add" style="width:100%;margin-bottom:6px;" onclick="agregarRegla()">Agregar</button>
+        <div class="reglas-err" id="reglaErr"></div>
+        <ul class="chips" id="listCodigos"></ul>
+      </div>
+
+      <div class="bento">
+        <h2><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 7h.01M3 11 11 3h7a2 2 0 0 1 2 2v7l-8 8-8-8Z"/></svg></span>Código de técnicos</h2>
+        <p class="help">Escribe el codigo a extraer.</p>
+        <div class="row-add-3">
+          <input type="text" id="inCodigoTec" placeholder="Cod. Ej. 10 o 5,8,14">
+          <input type="text" id="inPrecioTec" placeholder="Precio unitario. Ej. 60.00">
+          <input type="text" id="inMetaTec" placeholder="Meta. Ej. 0">
+          <input type="text" id="inPrecioMenorTec" placeholder="Precio unitario <. Ej. 20.00 (opcional)">
+        </div>
+        <button class="add" style="width:100%;margin-bottom:6px;" onclick="agregarReglaTec()">Agregar</button>
+        <div class="reglas-err" id="reglaErrTec"></div>
+        <ul class="chips" id="listCodigosTec"></ul>
+      </div>
+
+      <div class="bento">
+        <h2><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 7h.01M3 11 11 3h7a2 2 0 0 1 2 2v7l-8 8-8-8Z"/></svg></span>Código Σ autos</h2>
+        <p class="help">Escribe el codigo a extraer para la sumatoria de autos .</p>
+        <div class="row-add">
+          <input type="text" id="inCodigoAuto" placeholder="Cod. Ej. 206">
+          <button class="add" onclick="addItem('codigosAutos','inCodigoAuto')">Agregar</button>
+        </div>
+        <ul class="chips" id="listCodigosAutos"></ul>
+      </div>
+
+      <div class="bento">
+        <h2><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></span>Usuarios</h2>
+        <p class="help">Guarda los nombres de usuario.</p>
+        <div class="row-add">
+          <input type="text" id="inUsuario" placeholder="Nombre de usuario">
+          <button class="add" onclick="addItem('usuarios','inUsuario')">Agregar</button>
+        </div>
+        <ul class="chips" id="listUsuarios"></ul>
+      </div>
+
+      <div class="bento">
+        <h2><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M17 7.5c0-1.9-2.2-3.5-5-3.5s-5 1.6-5 3.5S9.2 11 12 11s5 1.6 5 3.5-2.2 3.5-5 3.5-5-1.6-5-3.5"/></svg></span>Activar tabla PC</h2>
+        <p class="help">Muestra u oculta la tabla "Pago de comisiones de cajeras".</p>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Tabla "Pago de comisiones"</div>
+            <div class="toggle-state" id="estadoTablaPC">Activada</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="togglePagoComisiones" checked onchange="toggleTablaPC()">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="bento">
+        <h2><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 7h.01M3 11 11 3h7a2 2 0 0 1 2 2v7l-8 8-8-8Z"/></svg></span>Código de precios fijos</h2>
+        <p class="help">Escribe el codigo a extraer.</p>
+        <div class="row-add-3">
+          <input type="text" id="inCodigoPF" placeholder="Cod. Ej. 10 o 5,8,14">
+          <input type="text" id="inPrecioPF" placeholder="Precio unitario. Ej. 60.00">
+          <input type="text" id="inMetaPF" placeholder="Meta. Ej. 0">
+          <input type="text" id="inPrecioMenorPF" placeholder="Precio unitario <. Ej. 20.00 (opcional)">
+        </div>
+        <button class="add" style="width:100%;margin-bottom:6px;" onclick="agregarReglaPF()">Agregar</button>
+        <div class="reglas-err" id="reglaErrPF"></div>
+        <ul class="chips" id="listCodigosPF"></ul>
+      </div>
+
+      <div class="bento">
+        <h2><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M17 7.5c0-1.9-2.2-3.5-5-3.5s-5 1.6-5 3.5S9.2 11 12 11s5 1.6 5 3.5-2.2 3.5-5 3.5-5-1.6-5-3.5"/></svg></span>Activar tabla PT</h2>
+        <p class="help">Muestra u oculta la tabla "Comisiones de técnicos".</p>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Tabla "Comisiones de técnicos"</div>
+            <div class="toggle-state" id="estadoTablaPT">Activada</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="togglePagoTecnicos" checked onchange="toggleTablaPT()">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="bento">
+        <h2><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></span>Eliminar PDF</h2>
+        <p class="help">Elimina los archivos PDF ya subidos dentro de un rango de fechas, para liberar espacio. Solo se borra el archivo; la información ya extraída (Cod, Descripción, Ctd, Total, etc.) se conserva en el Concentrado.</p>
+        <div class="filtros-bar" style="margin-bottom:0;">
+          <div class="filtro-campo">
+            <label for="delPdfDesde">Desde</label>
+            <select id="delPdfDesde"><option value="">Fecha inicial</option></select>
+          </div>
+          <div class="filtro-campo">
+            <label for="delPdfHasta">Hasta</label>
+            <select id="delPdfHasta"><option value="">Fecha final</option></select>
+          </div>
+        </div>
+        <button class="btn-danger" style="width:100%;margin-top:12px;" id="btnEliminarPdfRango">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Aceptar
+        </button>
+        <div class="msg" id="delPdfMsg"></div>
+      </div>
+
+      <div class="bento">
+        <h2><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></span>Eliminar Registros</h2>
+        <p class="help">Elimina los archivos PDF y todos los registros generados en un rango de fechas (Concentrado, autos y metas), para liberar espacio. Esta acción no se puede deshacer.</p>
+        <div class="filtros-bar" style="margin-bottom:0;">
+          <div class="filtro-campo">
+            <label for="delRegDesde">Desde</label>
+            <select id="delRegDesde"><option value="">Fecha inicial</option></select>
+          </div>
+          <div class="filtro-campo">
+            <label for="delRegHasta">Hasta</label>
+            <select id="delRegHasta"><option value="">Fecha final</option></select>
+          </div>
+        </div>
+        <button class="btn-danger" style="width:100%;margin-top:12px;" id="btnEliminarRegRango">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Aceptar
+        </button>
+        <div class="msg" id="delRegMsg"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= SUBIR PDF ================= -->
+  <section class="view active" id="view-subir">
+    <div class="bento-grid grid-subir">
+
+      <div class="bento">
+        <h2 style="margin-bottom:16px;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span>Nuevo registro</h2>
+
+        <div class="field">
+          <label for="fUsuario">Usuario</label>
+          <select id="fUsuario"><option value="">Selecciona un usuario…</option></select>
+        </div>
+
+        <div class="field">
+          <label>Archivo PDF</label>
+          <div class="dropzone" id="dropzone">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            <div class="dz-main">Arrastra tu PDF aquí o haz clic para elegirlo</div>
+            <div class="dz-sub">Solo archivos .pdf</div>
+            <div class="fname" id="fname"></div>
+          </div>
+          <input type="file" id="fPdf" accept="application/pdf" style="display:none;">
+        </div>
+
+        <button class="submit-btn" id="btnEnviar" onclick="procesarPdf()">Enviar</button>
+        <div class="msg" id="uploadMsg"></div>
+      </div>
+
+      <div class="bento-grid" style="grid-template-columns:1fr;">
+        <div class="bento">
+          <h2 style="margin-bottom:14px;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg></span>Cómo funciona</h2>
+          <ol class="steps-list">
+            <li><span class="num">1</span><span class="txt">Elige el <strong>usuario</strong> del registro.</span></li>
+            <li><span class="num">2</span><span class="txt">Sube el <strong>PDF</strong> de la venta.</span></li> 
+            <li><span class="num">3</span><span class="txt">Da clic en <strong>enviar</li> 
+          </ol>
+        </div>
+        <div class="bento" style="background:var(--surface-3);">
+          <h2 style="margin-bottom:6px;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4M12 17h.01M10.3 3.9 2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></span>Importante</h2>
+          <p class="help" style="margin-bottom:0;">No subas ventas repetidas.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= CONCENTRADO ================= -->
+  <section class="view" id="view-concentrado">
+
+    <div class="bento-grid grid-stats" style="margin-bottom:16px;">
+      <div class="bento stat-card">
+        <div class="stat-label"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9.5h17"/></svg></span>Registros</div>
+        <div class="stat-value" id="statCount">0</div>
+      </div>
+      <div class="bento stat-card">
+        <div class="stat-label"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 8h2M13 8h2M9 12h2M13 12h2"/></svg></span>Sucursales activas</div>
+        <div class="stat-value" id="statSucursales">0</div>
+      </div>
+    </div>
+
+    <div class="bento-grid grid-concentrado">
+      <div class="bento" id="bentoTotalAutos">
+        <h2 style="margin-bottom:14px;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11"/><rect x="3" y="11" width="18" height="6" rx="2"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg></span>Total de autos</h2>
+        <p class="help">Selecciona</p>
+
+        <div class="table-toolbar">
+          <button class="btn-export" id="btnExportAutos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Exportar a Excel</button>
+          <button class="btn-danger" id="btnBorrarAutos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>BORRAR</button>
+        </div>
+
+        <div class="filtros-bar">
+          <div class="filtro-campo">
+            <label for="autosModo">Modalidad</label>
+            <select id="autosModo">
+              <option value="1">Opción 1: por Usuario</option>
+              <option value="2">Opción 2: por Sucursal</option>
+            </select>
+          </div>
+          <div class="filtro-campo">
+            <label for="autosDesde">Desde</label>
+            <select id="autosDesde"><option value="">Fecha inicial</option></select>
+          </div>
+          <div class="filtro-campo">
+            <label for="autosHasta">Hasta</label>
+            <select id="autosHasta"><option value="">Fecha final</option></select>
+          </div>
+          <div class="filtro-campo" id="campoAutosUsuario">
+            <label for="autosUsuario">Usuario</label>
+            <select id="autosUsuario"><option value="">Todos los usuarios</option></select>
+          </div>
+          <div class="filtro-campo">
+            <label for="autosSucursal">Sucursal PDF</label>
+            <div class="msel" id="autosSucursal" data-placeholder="Todas las sucursales"></div>
+          </div>
+          <button class="filtro-limpiar" id="btnLimpiarAutos">Limpiar filtros</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="conc pago-tabla">
+            <colgroup>
+              <col style="width:24%"><col style="width:12%"><col style="width:52%"><col style="width:12%">
+            </colgroup>
+            <thead>
+              <tr>
+                <th id="autosColGrupo">Usuario</th><th>Cod</th><th>Descripción</th><th class="num">Ctd</th>
+              </tr>
+            </thead>
+            <tbody id="autosBody">
+              <tr><td colspan="4" class="empty-hint">Selecciona un intervalo de fechas para calcular el total de autos.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pago-total-card">
+          <div class="stat-label">Total de autos</div>
+          <div class="stat-value" id="autosTotalPill">0</div>
+        </div>
+      </div>
+
+      <div class="bento">
+        <h2 style="margin-bottom:14px;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9.5h17M8 4v16"/></svg></span>Registros extraídos</h2>
+
+        <div class="table-toolbar">
+          <button class="btn-export" id="btnExportRegistros"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Exportar a Excel</button>
+          <button class="btn-danger" id="btnBorrarRegistros"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>BORRAR</button>
+        </div>
+
+        <div class="filtros-bar">
+          <div class="filtro-campo">
+            <label for="filtroFechaPdf">Fecha PDF</label>
+            <select id="filtroFechaPdf"><option value="">Todas</option></select>
+          </div>
+          <div class="filtro-campo">
+            <label for="filtroSucursalPdf">Sucursal PDF</label>
+            <div class="msel" id="filtroSucursalPdf" data-placeholder="Todas"></div>
+          </div>
+          <div class="filtro-campo">
+            <label for="filtroUsuario">Usuario</label>
+            <select id="filtroUsuario"><option value="">Todos</option></select>
+          </div>
+          <button class="filtro-limpiar" id="btnLimpiarFiltros">Limpiar filtros</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="conc">
+            <thead>
+              <tr>
+                <th>Fecha PDF</th><th>Sucursal PDF</th><th>Usuario PDF</th><th>Usuario</th><th>Cod</th><th>Descripción</th><th class="num">Ctd</th><th>PDF</th><th>Eliminar</th><th>Editar</th>
+              </tr>
+            </thead>
+            <tbody id="concBody">
+              <tr><td colspan="10" class="empty-hint">Aún no hay registros. Sube un PDF en la sección "Subir PDF".</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bento" id="bentoPagoComisiones">
+        <h2 style="margin-bottom:14px;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M17 7.5c0-1.9-2.2-3.5-5-3.5s-5 1.6-5 3.5S9.2 11 12 11s5 1.6 5 3.5-2.2 3.5-5 3.5-5-1.6-5-3.5"/></svg></span>PRECIOS FIJOS</h2>
+        <p class="help">MODALIDAD 1</p>
+
+        <div class="table-toolbar">
+          <button class="btn-export" id="btnExportPago"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Exportar a Excel</button>
+          <button class="btn-danger" id="btnBorrarPago"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>BORRAR</button>
+        </div>
+
+        <div class="filtros-bar">
+          <div class="filtro-campo">
+            <label for="pagoDesde">Desde</label>
+            <select id="pagoDesde"><option value="">Fecha inicial</option></select>
+          </div>
+          <div class="filtro-campo">
+            <label for="pagoHasta">Hasta</label>
+            <select id="pagoHasta"><option value="">Fecha final</option></select>
+          </div>
+          <div class="filtro-campo">
+            <label for="pagoUsuario">Usuario</label>
+            <select id="pagoUsuario"><option value="">Todos los usuarios</option></select>
+          </div>
+          <div class="filtro-campo">
+            <label>Sucursal PDF</label>
+            <div class="msel" id="pagoSucursal" data-placeholder="Todas las sucursales"></div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="conc pago-tabla con-pdf">
+            <colgroup>
+              <col class="col-pdf"><col class="col-pdf"><col class="col-pdf"><col class="col-usuario"><col class="col-cod"><col class="col-desc">
+              <col class="col-ctd"><col class="col-precio"><col class="col-suma">
+              <col class="col-monto"><col class="col-meta">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Fecha PDF</th><th>Sucursal PDF</th><th>Usuario PDF</th><th>Usuario</th><th>Cod</th><th>Descripción</th><th class="num">Ctd</th><th class="num">Precio unitario</th><th class="num">Σ</th><th class="num">Monto</th><th>Meta</th>
+              </tr>
+            </thead>
+            <tbody id="pagoBody">
+              <tr><td colspan="11" class="empty-hint">Selecciona un intervalo de fechas para calcular las comisiones.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pago-total-card">
+          <div class="stat-label">Total a pagar</div>
+          <div class="stat-value" id="pagoTotalPill">$0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bento-grid grid-concentrado" style="margin-top:16px;" id="gridPagoTecnicos">
+      <div class="bento" id="bentoPagoTecnicos">
+        <h2 style="margin-bottom:14px;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M17 7.5c0-1.9-2.2-3.5-5-3.5s-5 1.6-5 3.5S9.2 11 12 11s5 1.6 5 3.5-2.2 3.5-5 3.5-5-1.6-5-3.5"/></svg></span>Comisiones de técnicos</h2>
+        <p class="help">Selecciona un intervalo</p>
+
+        <div class="table-toolbar">
+          <button class="btn-export" id="btnExportPagoTec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Exportar a Excel</button>
+          <button class="btn-danger" id="btnBorrarPagoTec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>BORRAR</button>
+        </div>
+
+        <div class="filtros-bar">
+          <div class="filtro-campo">
+            <label for="pagoDesdeTec">Desde</label>
+            <select id="pagoDesdeTec"><option value="">Fecha inicial</option></select>
+          </div>
+          <div class="filtro-campo">
+            <label for="pagoHastaTec">Hasta</label>
+            <select id="pagoHastaTec"><option value="">Fecha final</option></select>
+          </div>
+          <div class="filtro-campo">
+            <label for="pagoSucursalTec">Sucursal PDF</label>
+            <select id="pagoSucursalTec"><option value="">Todas las sucursales</option></select>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="conc pago-tabla">
+            <colgroup>
+              <col class="col-usuario"><col class="col-cod"><col class="col-desc">
+              <col class="col-ctd"><col class="col-precio"><col class="col-suma">
+              <col class="col-monto"><col class="col-meta">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Sucursal PDF</th><th>Cod</th><th>Descripción</th><th class="num">Ctd</th><th class="num">Precio unitario</th><th class="num">Σ</th><th class="num">Monto</th><th>Meta</th>
+              </tr>
+            </thead>
+            <tbody id="pagoBodyTec">
+              <tr><td colspan="8" class="empty-hint">Selecciona un intervalo de fechas para calcular las comisiones.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pago-total-card">
+          <div class="stat-label">Total a pagar</div>
+          <div class="stat-value" id="pagoTotalPillTec">$0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bento-grid grid-particiones" style="margin-top:16px;">
+      <div class="bento bento-wide" id="bentoParametroMeta" style="grid-column:1/-1;">
+        <h2 style="margin-bottom:14px;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M17 7.5c0-1.9-2.2-3.5-5-3.5s-5 1.6-5 3.5S9.2 11 12 11s5 1.6 5 3.5-2.2 3.5-5 3.5-5-1.6-5-3.5"/></svg></span>META</h2>
+        <p class="help" id="paramMetaHint">MODALIDAD 1</p>
+
+        <div class="filtros-bar">
+          <div class="filtro-campo">
+            <label for="metaDesde">Desde</label>
+            <select id="metaDesde"><option value="">Fecha inicial</option></select>
+          </div>
+          <div class="filtro-campo">
+            <label for="metaHasta">Hasta</label>
+            <select id="metaHasta"><option value="">Fecha final</option></select>
+          </div>
+          <div class="filtro-campo">
+            <label for="metaUsuario">Usuario</label>
+            <select id="metaUsuario"><option value="">Todos los usuarios</option></select>
+          </div>
+          <div class="filtro-campo">
+            <label>Sucursal PDF</label>
+            <div class="msel" id="metaSucursal" data-placeholder="Todas las sucursales"></div>
+          </div>
+        </div>
+
+        <div id="paramMetaContenido" style="display:none;">
+          <div class="table-toolbar">
+            <button class="btn-export" id="btnExportMeta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Exportar resumen a Excel</button>
+          </div>
+          <div id="paramMetaResumenCards" style="display:flex;gap:14px;margin-bottom:16px;flex-wrap:wrap;">
+            <div class="stat-card" style="flex:1;min-width:200px;background:var(--surface-3);border:1px solid var(--line);border-radius:var(--radius-md);">
+              <div class="stat-label">Usuario</div>
+              <div class="stat-value" id="paramMetaUsuario" style="font-size:16px;">-</div>
+            </div>
+            <div class="stat-card" style="flex:1;min-width:200px;background:var(--surface-3);border:1px solid var(--line);border-radius:var(--radius-md);">
+              <div class="stat-label">AUTOS</div>
+              <div class="stat-value" id="paramMetaSubtotal">0</div>
+            </div>
+          </div>
+
+          <div class="table-wrap" id="paramMetaTiersWrap" style="margin-bottom:16px;">
+            <table class="conc">
+              <thead>
+                <tr><th>Descripción</th><th class="num">Autos por servicio</th><th class="num">Autos meta</th><th class="num">Precio</th></tr>
+              </thead>
+              <tbody id="paramMetaTiersBody"></tbody>
+            </table>
+          </div>
+
+          <div class="table-wrap">
+            <table class="conc meta-detalle">
+              <thead id="paramMetaDetalleHead">
+                <tr><th class="pdf-fecha">Fecha PDF</th><th class="pdf-suc">Sucursal PDF</th><th class="pdf-usr">Usuario PDF</th><th>Código</th><th>Concepto</th><th class="num">Cantidad</th><th class="num">Base</th><th class="num">Meta alcanzada</th></tr>
+              </thead>
+              <tbody id="paramMetaDetalleBody"></tbody>
+            </table>
+          </div>
+
+          <div class="pago-total-card">
+            <div class="stat-label">TOTAL</div>
+            <div class="stat-value" id="paramMetaTotalPill">$0.00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bento-grid grid-particiones" style="margin-top:16px;">
+      <div class="bento bento-wide" id="bentoPreciosFijos" style="grid-column:1/-1;">
+        <h2 style="margin-bottom:14px;"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M17 7.5c0-1.9-2.2-3.5-5-3.5s-5 1.6-5 3.5S9.2 11 12 11s5 1.6 5 3.5-2.2 3.5-5 3.5-5-1.6-5-3.5"/></svg></span>PRECIOS FIJOS</h2>
+        <p class="help">MODALIDAD 2</p>
+
+        <div class="table-toolbar">
+          <button class="btn-export" id="btnExportPF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Exportar a Excel</button>
+          <button class="btn-danger" id="btnBorrarPF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>BORRAR</button>
+        </div>
+
+        <div class="filtros-bar">
+          <div class="filtro-campo">
+            <label for="pfDesde">Desde</label>
+            <select id="pfDesde"><option value="">Fecha inicial</option></select>
+          </div>
+          <div class="filtro-campo">
+            <label for="pfHasta">Hasta</label>
+            <select id="pfHasta"><option value="">Fecha final</option></select>
+          </div>
+          <div class="filtro-campo">
+            <label for="pfUsuario">Usuario</label>
+            <select id="pfUsuario"><option value="">Todos los usuarios</option></select>
+          </div>
+          <div class="filtro-campo">
+            <label>Sucursal PDF</label>
+            <div class="msel" id="pfSucursal" data-placeholder="Todas las sucursales"></div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="conc pago-tabla con-pdf">
+            <colgroup>
+              <col class="col-pdf"><col class="col-pdf"><col class="col-pdf"><col class="col-usuario"><col class="col-cod"><col class="col-desc">
+              <col class="col-ctd"><col class="col-precio"><col class="col-suma">
+              <col class="col-monto"><col class="col-meta">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Fecha PDF</th><th>Sucursal PDF</th><th>Usuario PDF</th><th>Usuario</th><th>Cod</th><th>Descripción</th><th class="num">Ctd</th><th class="num">Precio unitario</th><th class="num">Σ</th><th class="num">Monto</th><th>Meta</th>
+              </tr>
+            </thead>
+            <tbody id="pfBody">
+              <tr><td colspan="11" class="empty-hint">Selecciona un intervalo de fechas para calcular los precios fijos.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pago-total-card">
+          <div class="stat-label">Total a pagar</div>
+          <div class="stat-value" id="pfTotalPill">$0.00</div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+</div>
+
+<!-- ================= MODAL AUTORIZAR ================= -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-modal">
+    <h3>Autorizar</h3>
+    <p class="auth-desc" id="authDesc">Esta información está duplicada. Ingresa la contraseña de administrador para guardarla de todos modos.</p>
+    <input type="password" id="authPass" class="auth-input" placeholder="Contraseña de administrador" autocomplete="off">
+    <div class="auth-err" id="authErr"></div>
+    <div class="auth-actions">
+      <button class="auth-cancel" id="authCancelBtn">Cancelar</button>
+      <button class="auth-accept" id="authAcceptBtn">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL EDITAR REGISTRO ================= -->
+<div class="edit-overlay" id="editOverlay">
+  <div class="edit-modal">
+    <h3>Editar registro</h3>
+    <div class="field-edit">
+      <label for="editFechaPdf">Fecha PDF</label>
+      <input type="text" id="editFechaPdf">
+    </div>
+    <div class="field-edit">
+      <label for="editSucursalPdf">Sucursal PDF</label>
+      <input type="text" id="editSucursalPdf">
+    </div>
+    <div class="field-edit">
+      <label for="editUsuarioPdf">Usuario PDF</label>
+      <input type="text" id="editUsuarioPdf">
+    </div>
+    <div class="field-edit">
+      <label for="editUsuario">Usuario</label>
+      <input type="text" id="editUsuario">
+    </div>
+    <div class="field-edit">
+      <label for="editCod">Cod</label>
+      <input type="text" id="editCod">
+    </div>
+    <div class="field-edit">
+      <label for="editDescripcion">Descripción</label>
+      <input type="text" id="editDescripcion">
+    </div>
+    <div class="field-edit">
+      <label for="editCtd">Ctd</label>
+      <input type="text" id="editCtd">
+    </div>
+    <div class="field-edit">
+      <label for="editTotal">Total</label>
+      <input type="text" id="editTotal">
+    </div>
+    <div class="auth-err" id="editErr"></div>
+    <div class="auth-actions">
+      <button class="auth-cancel" id="editCancelBtn">Cancelar</button>
+      <button class="auth-accept" id="editSaveBtn">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL CONFIRMAR ELIMINAR PDF ================= -->
+<div class="auth-overlay" id="delPdfOverlay">
+  <div class="auth-modal">
+    <h3>Eliminar PDF</h3>
+    <p class="auth-desc" id="delPdfConfirmDesc">¿DESEA ELIMINAR ESTE RANGO DE PDF?</p>
+    <div class="auth-err" id="delPdfConfirmErr"></div>
+    <div class="auth-actions">
+      <button class="auth-cancel" id="delPdfCancelBtn">Cancelar</button>
+      <button class="auth-accept" id="delPdfAcceptBtn">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL CONFIRMAR ELIMINAR REGISTROS ================= -->
+<div class="auth-overlay" id="delRegOverlay">
+  <div class="auth-modal">
+    <h3>Eliminar Registros</h3>
+    <p class="auth-desc" id="delRegConfirmDesc">¿DESEA ELIMINAR LOS PDF Y TODOS LOS REGISTROS DE ESTE RANGO? ESTA ACCIÓN NO SE PUEDE DESHACER.</p>
+    <div class="auth-err" id="delRegConfirmErr"></div>
+    <div class="auth-actions">
+      <button class="auth-cancel" id="delRegCancelBtn">Cancelar</button>
+      <button class="auth-accept" id="delRegAcceptBtn">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Firebase ---------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyAqonjPTLmho5iwSd6X0NEo9qBbY_7O2ug",
+  authDomain: "comisiones-a81d7.firebaseapp.com",
+  databaseURL: "https://comisiones-a81d7-default-rtdb.firebaseio.com",
+  projectId: "comisiones-a81d7",
+  storageBucket: "comisiones-a81d7.firebasestorage.app",
+  messagingSenderId: "618970878576",
+  appId: "1:618970878576:web:c4f8ce670b921378fa5ab5"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+db.ref(".info/connected").on("value", snap=>{
+  const dot = document.getElementById("fbDot");
+  const status = document.getElementById("fbStatus");
+  if(snap.val() === true){
+    dot.className = "dot on";
+    status.textContent = "Conectado";
+  } else {
+    dot.className = "dot off";
+    status.textContent = "Sin conexión a la base de datos";
+  }
+});
+
+/* ---------- Tabs ---------- */
+let configuracionDesbloqueada = false;
+
+function activarTab(btn){
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll("section.view").forEach(v=>v.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("view-"+btn.dataset.tab).classList.add("active");
+}
+
+document.querySelectorAll("nav.tabs button").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    if(btn.dataset.tab === "particiones" && !configuracionDesbloqueada){
+      abrirModalAutorizar(
+        "Ingresa la contraseña de administrador para desbloquear Configuración.",
+        ()=>{
+          configuracionDesbloqueada = true;
+          document.getElementById("tabConfiguracion").classList.add("unlocked");
+          activarTab(btn);
+        }
+      );
+      return;
+    }
+    activarTab(btn);
+  });
+});
+
+/* ---------- Configuración: codigos / usuarios ---------- */
+const refs = {
+  codigos: db.ref("particiones/codigos"),
+  codigosTec: db.ref("particiones/codigosTec"),
+  codigosAutos: db.ref("particiones/codigosAutos"),
+  codigosMeta: db.ref("particiones/codigosMeta"),
+  codigosPF: db.ref("particiones/codigosPF"),
+  parametros: db.ref("particiones/parametros"),
+  usuarios: db.ref("particiones/usuarios")
+};
+const refToggles = db.ref("particiones/toggles");
+const listEl = {
+  codigos: document.getElementById("listCodigos"),
+  codigosTec: document.getElementById("listCodigosTec"),
+  codigosAutos: document.getElementById("listCodigosAutos"),
+  usuarios: document.getElementById("listUsuarios")
+};
+const cache = { codigos:{}, codigosTec:{}, codigosAutos:{}, codigosMeta:{}, codigosPF:{}, parametros:{}, usuarios:{} };
+
+function addItem(kind, inputId){
+  const input = document.getElementById(inputId);
+  const val = input.value.trim();
+  if(!val) return;
+  refs[kind].push(val);
+  input.value = "";
+  input.focus();
+}
+
+function renderList(kind){
+  const entries = Object.entries(cache[kind]);
+  const el = listEl[kind];
+  el.innerHTML = "";
+  if(entries.length === 0){
+    el.innerHTML = '<li class="empty-hint" style="border:none;background:none;padding-left:2px;">Sin elementos guardados aún.</li>';
+    return;
+  }
+  entries.sort((a,b)=> (a[1]||"").localeCompare(b[1]||"", 'es', {numeric:true}));
+  entries.forEach(([key, val])=>{
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="lbl">${escapeHtml(val)}</span>`;
+    const delBtn = document.createElement("button");
+    delBtn.className = "del";
+    delBtn.innerHTML = "&times;";
+    delBtn.onclick = ()=> refs[kind].child(key).remove();
+    li.appendChild(delBtn);
+    el.appendChild(li);
+  });
+}
+
+/* ---------- Reglas de comisión (Cod / Precio unitario / Meta / Combinatoria) ---------- */
+function normalizaRegla(raw){
+  // Compatibilidad con datos antiguos guardados como texto plano.
+  if(typeof raw === "string" || typeof raw === "number"){
+    return { codigo: String(raw), precio: 0, meta: 0, precioMenor: null };
+  }
+  const precio = parseFloat(raw && raw.precio);
+  const meta = parseFloat(raw && raw.meta);
+  const precioMenorRaw = raw && raw.precioMenor;
+  const precioMenor = (precioMenorRaw === "" || precioMenorRaw === null || precioMenorRaw === undefined)
+    ? null
+    : parseFloat(precioMenorRaw);
+  return {
+    codigo: (raw && raw.codigo) ? String(raw.codigo) : "",
+    precio: isNaN(precio) ? 0 : precio,
+    meta: isNaN(meta) ? 0 : meta,
+    precioMenor: (precioMenor === null || isNaN(precioMenor)) ? null : precioMenor
+  };
+}
+
+function getReglas(){
+  return Object.entries(cache.codigos || {}).map(([key, raw])=> Object.assign({key}, normalizaRegla(raw))).filter(r=>r.codigo);
+}
+
+function getReglasTec(){
+  return Object.entries(cache.codigosTec || {}).map(([key, raw])=> Object.assign({key}, normalizaRegla(raw))).filter(r=>r.codigo);
+}
+
+function getReglasPF(){
+  return Object.entries(cache.codigosPF || {}).map(([key, raw])=> Object.assign({key}, normalizaRegla(raw))).filter(r=>r.codigo);
+}
+
+function getCodigosIndividuales(){
+  const out = [];
+  getReglas().forEach(r=>{
+    r.codigo.split(",").map(s=>s.trim()).filter(Boolean).forEach(c=> out.push(c));
+  });
+  return out;
+}
+
+function getCodigosAutos(){
+  return Object.values(cache.codigosAutos || {}).map(v=>String(v).trim()).filter(Boolean);
+}
+
+function getCodigosMetaList(){
+  return Object.entries(cache.codigosMeta || {}).map(([key, raw])=>{
+    const codigo = (raw && raw.codigo) ? String(raw.codigo) : (typeof raw === "string" ? raw : "");
+    const precioBase = raw && raw.precioBase !== undefined ? parseNumero(raw.precioBase) : 0;
+    const precioFijoRaw = raw && raw.precioFijo;
+    const precioFijo = (precioFijoRaw === "" || precioFijoRaw === null || precioFijoRaw === undefined) ? null : parseNumero(precioFijoRaw);
+    return { key, codigo, precioBase, precioFijo };
+  }).filter(c=>c.codigo);
+}
+
+function getCodigosMetaIndividuales(){
+  const out = [];
+  getCodigosMetaList().forEach(c=>{
+    c.codigo.split(",").map(s=>s.trim()).filter(Boolean).forEach(cod=> out.push(cod));
+  });
+  return out;
+}
+
+function getParametros(){
+  return Object.entries(cache.parametros || {}).map(([key, raw])=>{
+    const descripcion = (raw && raw.descripcion) ? String(raw.descripcion) : "";
+    const autosPorServicio = raw && raw.autosPorServicio !== undefined ? parseNumero(raw.autosPorServicio) : 0;
+    const precio = raw && raw.precio !== undefined ? parseNumero(raw.precio) : 0;
+    return { key, descripcion, autosPorServicio, precio };
+  }).filter(p=>p.descripcion).sort((a,b)=> b.autosPorServicio - a.autosPorServicio);
+}
+
+function formatoMoneda(n){
+  return "$" + (Number(n)||0).toLocaleString("es-MX", {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function agregarRegla(){
+  const inCod = document.getElementById("inCodigo");
+  const inPrecio = document.getElementById("inPrecio");
+  const inMeta = document.getElementById("inMeta");
+  const inPrecioMenor = document.getElementById("inPrecioMenor");
+  const err = document.getElementById("reglaErr");
+  err.textContent = "";
+
+  const codigoRaw = inCod.value.trim();
+  if(!codigoRaw){ err.textContent = 'Escribe al menos un "Cod".'; return; }
+
+  const precioRaw = inPrecio.value.trim().replace(/^\$/, "").replace(/,/g, "");
+  const precio = parseFloat(precioRaw);
+  if(precioRaw === "" || isNaN(precio) || precio < 0){ err.textContent = "El Precio unitario debe ser un número válido."; return; }
+
+  const metaRaw = inMeta.value.trim();
+  const meta = metaRaw === "" ? 0 : parseFloat(metaRaw);
+  if(isNaN(meta) || meta < 0){ err.textContent = 'La Meta debe ser un número válido (usa 0 si no aplica).'; return; }
+
+  const precioMenorRaw = (inPrecioMenor.value || "").trim().replace(/^\$/, "").replace(/,/g, "");
+  let precioMenor = null;
+  if(precioMenorRaw !== ""){
+    precioMenor = parseFloat(precioMenorRaw);
+    if(isNaN(precioMenor) || precioMenor < 0){ err.textContent = 'El "Precio unitario <" debe ser un número válido (déjalo vacío si no aplica).'; return; }
+  }
+
+  const codigo = codigoRaw.split(",").map(s=>s.trim()).filter(Boolean).join(",");
+  if(!codigo){ err.textContent = 'Escribe al menos un "Cod" válido.'; return; }
+
+  refs.codigos.push({ codigo, precio, meta, precioMenor });
+  inCod.value = ""; inPrecio.value = ""; inMeta.value = ""; inPrecioMenor.value = "";
+  inCod.focus();
+}
+
+function agregarReglaTec(){
+  const inCod = document.getElementById("inCodigoTec");
+  const inPrecio = document.getElementById("inPrecioTec");
+  const inMeta = document.getElementById("inMetaTec");
+  const inPrecioMenor = document.getElementById("inPrecioMenorTec");
+  const err = document.getElementById("reglaErrTec");
+  err.textContent = "";
+
+  const codigoRaw = inCod.value.trim();
+  if(!codigoRaw){ err.textContent = 'Escribe al menos un "Cod".'; return; }
+
+  const precioRaw = inPrecio.value.trim().replace(/^\$/, "").replace(/,/g, "");
+  const precio = parseFloat(precioRaw);
+  if(precioRaw === "" || isNaN(precio) || precio < 0){ err.textContent = "El Precio unitario debe ser un número válido."; return; }
+
+  const metaRaw = inMeta.value.trim();
+  const meta = metaRaw === "" ? 0 : parseFloat(metaRaw);
+  if(isNaN(meta) || meta < 0){ err.textContent = 'La Meta debe ser un número válido (usa 0 si no aplica).'; return; }
+
+  const precioMenorRaw = (inPrecioMenor.value || "").trim().replace(/^\$/, "").replace(/,/g, "");
+  let precioMenor = null;
+  if(precioMenorRaw !== ""){
+    precioMenor = parseFloat(precioMenorRaw);
+    if(isNaN(precioMenor) || precioMenor < 0){ err.textContent = 'El "Precio unitario <" debe ser un número válido (déjalo vacío si no aplica).'; return; }
+  }
+
+  const codigo = codigoRaw.split(",").map(s=>s.trim()).filter(Boolean).join(",");
+  if(!codigo){ err.textContent = 'Escribe al menos un "Cod" válido.'; return; }
+
+  refs.codigosTec.push({ codigo, precio, meta, precioMenor });
+  inCod.value = ""; inPrecio.value = ""; inMeta.value = ""; inPrecioMenor.value = "";
+  inCod.focus();
+}
+
+function agregarReglaPF(){
+  const inCod = document.getElementById("inCodigoPF");
+  const inPrecio = document.getElementById("inPrecioPF");
+  const inMeta = document.getElementById("inMetaPF");
+  const inPrecioMenor = document.getElementById("inPrecioMenorPF");
+  const err = document.getElementById("reglaErrPF");
+  err.textContent = "";
+
+  const codigoRaw = inCod.value.trim();
+  if(!codigoRaw){ err.textContent = 'Escribe al menos un "Cod".'; return; }
+
+  const precioRaw = inPrecio.value.trim().replace(/^\$/, "").replace(/,/g, "");
+  const precio = parseFloat(precioRaw);
+  if(precioRaw === "" || isNaN(precio) || precio < 0){ err.textContent = "El Precio unitario debe ser un número válido."; return; }
+
+  const metaRaw = inMeta.value.trim();
+  const meta = metaRaw === "" ? 0 : parseFloat(metaRaw);
+  if(isNaN(meta) || meta < 0){ err.textContent = 'La Meta debe ser un número válido (usa 0 si no aplica).'; return; }
+
+  const precioMenorRaw = (inPrecioMenor.value || "").trim().replace(/^\$/, "").replace(/,/g, "");
+  let precioMenor = null;
+  if(precioMenorRaw !== ""){
+    precioMenor = parseFloat(precioMenorRaw);
+    if(isNaN(precioMenor) || precioMenor < 0){ err.textContent = 'El "Precio unitario <" debe ser un número válido (déjalo vacío si no aplica).'; return; }
+  }
+
+  const codigo = codigoRaw.split(",").map(s=>s.trim()).filter(Boolean).join(",");
+  if(!codigo){ err.textContent = 'Escribe al menos un "Cod" válido.'; return; }
+
+  refs.codigosPF.push({ codigo, precio, meta, precioMenor });
+  inCod.value = ""; inPrecio.value = ""; inMeta.value = ""; inPrecioMenor.value = "";
+  inCod.focus();
+}
+
+function renderReglas(){
+  const entries = Object.entries(cache.codigos || {});
+  const el = listEl.codigos;
+  el.innerHTML = "";
+  if(entries.length === 0){
+    el.innerHTML = '<li class="empty-hint" style="border:none;background:none;padding-left:2px;">Sin elementos guardados aún.</li>';
+    return;
+  }
+  entries.sort((a,b)=> normalizaRegla(a[1]).codigo.localeCompare(normalizaRegla(b[1]).codigo, 'es', {numeric:true}));
+  entries.forEach(([key, raw])=>{
+    const r = normalizaRegla(raw);
+    const esCombinatoria = r.codigo.split(",").filter(s=>s.trim()).length > 1;
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <div class="chip-regla-info">
+        <div class="chip-regla-top">
+          <span class="lbl">${escapeHtml(r.codigo)}</span>
+          ${esCombinatoria ? '<span class="badge-combo">Combinatoria</span>' : ''}
+        </div>
+        <div class="chip-regla-sub">Precio: ${formatoMoneda(r.precio)} · Meta: ${r.meta}${(r.meta > 0 && r.precioMenor !== null) ? ' · Precio &lt;: ' + formatoMoneda(r.precioMenor) : ''}</div>
+      </div>`;
+    const delBtn = document.createElement("button");
+    delBtn.className = "del";
+    delBtn.innerHTML = "&times;";
+    delBtn.onclick = ()=> refs.codigos.child(key).remove();
+    li.appendChild(delBtn);
+    el.appendChild(li);
+  });
+}
+
+function renderReglasTec(){
+  const entries = Object.entries(cache.codigosTec || {});
+  const el = listEl.codigosTec;
+  el.innerHTML = "";
+  if(entries.length === 0){
+    el.innerHTML = '<li class="empty-hint" style="border:none;background:none;padding-left:2px;">Sin elementos guardados aún.</li>';
+    return;
+  }
+  entries.sort((a,b)=> normalizaRegla(a[1]).codigo.localeCompare(normalizaRegla(b[1]).codigo, 'es', {numeric:true}));
+  entries.forEach(([key, raw])=>{
+    const r = normalizaRegla(raw);
+    const esCombinatoria = r.codigo.split(",").filter(s=>s.trim()).length > 1;
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <div class="chip-regla-info">
+        <div class="chip-regla-top">
+          <span class="lbl">${escapeHtml(r.codigo)}</span>
+          ${esCombinatoria ? '<span class="badge-combo">Combinatoria</span>' : ''}
+        </div>
+        <div class="chip-regla-sub">Precio: ${formatoMoneda(r.precio)} · Meta: ${r.meta}${(r.meta > 0 && r.precioMenor !== null) ? ' · Precio &lt;: ' + formatoMoneda(r.precioMenor) : ''}</div>
+      </div>`;
+    const delBtn = document.createElement("button");
+    delBtn.className = "del";
+    delBtn.innerHTML = "&times;";
+    delBtn.onclick = ()=> refs.codigosTec.child(key).remove();
+    li.appendChild(delBtn);
+    el.appendChild(li);
+  });
+}
+
+function renderReglasPF(){
+  const entries = Object.entries(cache.codigosPF || {});
+  const el = document.getElementById("listCodigosPF");
+  el.innerHTML = "";
+  if(entries.length === 0){
+    el.innerHTML = '<li class="empty-hint" style="border:none;background:none;padding-left:2px;">Sin elementos guardados aún.</li>';
+    return;
+  }
+  entries.sort((a,b)=> normalizaRegla(a[1]).codigo.localeCompare(normalizaRegla(b[1]).codigo, 'es', {numeric:true}));
+  entries.forEach(([key, raw])=>{
+    const r = normalizaRegla(raw);
+    const esCombinatoria = r.codigo.split(",").filter(s=>s.trim()).length > 1;
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <div class="chip-regla-info">
+        <div class="chip-regla-top">
+          <span class="lbl">${escapeHtml(r.codigo)}</span>
+          ${esCombinatoria ? '<span class="badge-combo">Combinatoria</span>' : ''}
+        </div>
+        <div class="chip-regla-sub">Precio: ${formatoMoneda(r.precio)} · Meta: ${r.meta}${(r.meta > 0 && r.precioMenor !== null) ? ' · Precio &lt;: ' + formatoMoneda(r.precioMenor) : ''}</div>
+      </div>`;
+    const delBtn = document.createElement("button");
+    delBtn.className = "del";
+    delBtn.innerHTML = "&times;";
+    delBtn.onclick = ()=> refs.codigosPF.child(key).remove();
+    li.appendChild(delBtn);
+    el.appendChild(li);
+  });
+}
+
+function agregarCodigoMeta(){
+  const inCod = document.getElementById("inCodigoMeta");
+  const inBase = document.getElementById("inPrecioBaseMeta");
+  const inFijo = document.getElementById("inPrecioFijoMeta");
+  const err = document.getElementById("codigoMetaErr");
+  err.textContent = "";
+
+  const codigoRaw = inCod.value.trim();
+  if(!codigoRaw){ err.textContent = 'Escribe al menos un "Cod".'; return; }
+
+  const baseRaw = inBase.value.trim().replace(/^\$/, "").replace(/,/g, "");
+  const precioBase = parseFloat(baseRaw);
+  if(baseRaw === "" || isNaN(precioBase) || precioBase < 0){ err.textContent = 'El "Precio BASE" debe ser un número válido.'; return; }
+
+  const fijoRaw = (inFijo.value || "").trim().replace(/^\$/, "").replace(/,/g, "");
+  let precioFijo = null;
+  if(fijoRaw !== ""){
+    precioFijo = parseFloat(fijoRaw);
+    if(isNaN(precioFijo) || precioFijo < 0){ err.textContent = 'El "Precio FIJO" debe ser un número válido (déjalo vacío si no aplica).'; return; }
+  }
+
+  const codigo = codigoRaw.split(",").map(s=>s.trim()).filter(Boolean).join(",");
+  if(!codigo){ err.textContent = 'Escribe al menos un "Cod" válido.'; return; }
+
+  refs.codigosMeta.push({ codigo, precioBase, precioFijo });
+  inCod.value = ""; inBase.value = ""; inFijo.value = "";
+  inCod.focus();
+}
+
+function renderCodigosMeta(){
+  const entries = Object.entries(cache.codigosMeta || {});
+  const el = document.getElementById("listCodigosMeta");
+  el.innerHTML = "";
+  if(entries.length === 0){
+    el.innerHTML = '<li class="empty-hint" style="border:none;background:none;padding-left:2px;">Sin elementos guardados aún.</li>';
+    return;
+  }
+  entries.sort((a,b)=> String((a[1]&&a[1].codigo)||"").localeCompare(String((b[1]&&b[1].codigo)||""), 'es', {numeric:true}));
+  entries.forEach(([key, raw])=>{
+    const codigo = (raw && raw.codigo) ? String(raw.codigo) : "";
+    const precioBase = raw && raw.precioBase !== undefined ? parseNumero(raw.precioBase) : 0;
+    const precioFijo = (raw && raw.precioFijo !== undefined && raw.precioFijo !== null) ? parseNumero(raw.precioFijo) : null;
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <div class="chip-regla-info">
+        <div class="chip-regla-top"><span class="lbl">${escapeHtml(codigo)}</span></div>
+        <div class="chip-regla-sub">Precio BASE: ${formatoMoneda(precioBase)}${precioFijo !== null ? ' · Precio FIJO: ' + formatoMoneda(precioFijo) : ''}</div>
+      </div>`;
+    const delBtn = document.createElement("button");
+    delBtn.className = "del";
+    delBtn.innerHTML = "&times;";
+    delBtn.onclick = ()=> refs.codigosMeta.child(key).remove();
+    li.appendChild(delBtn);
+    el.appendChild(li);
+  });
+}
+
+function agregarParametro(){
+  const inDesc = document.getElementById("inParamDescripcion");
+  const inAutos = document.getElementById("inParamAutos");
+  const inPrecio = document.getElementById("inParamPrecio");
+  const err = document.getElementById("paramErr");
+  err.textContent = "";
+
+  const descripcion = inDesc.value.trim();
+  if(!descripcion){ err.textContent = 'Escribe una "Descripción".'; return; }
+
+  const autosRaw = inAutos.value.trim();
+  const autosPorServicio = parseFloat(autosRaw);
+  if(autosRaw === "" || isNaN(autosPorServicio) || autosPorServicio <= 0){ err.textContent = 'Los "Autos por servicio comisionable" deben ser un número mayor a 0.'; return; }
+
+  const precioRaw = (inPrecio.value || "").trim().replace(/^\$/, "").replace(/,/g, "");
+  const precio = precioRaw === "" ? 0 : parseFloat(precioRaw);
+  if(isNaN(precio) || precio < 0){ err.textContent = 'El "Precio" debe ser un número válido (déjalo vacío o en 0 si no aplica).'; return; }
+
+  refs.parametros.push({ descripcion, autosPorServicio, precio });
+  inDesc.value = ""; inAutos.value = ""; inPrecio.value = "";
+  inDesc.focus();
+}
+
+function renderParametros(){
+  const entries = Object.entries(cache.parametros || {});
+  const el = document.getElementById("listParametros");
+  el.innerHTML = "";
+  if(entries.length === 0){
+    el.innerHTML = '<li class="empty-hint" style="border:none;background:none;padding-left:2px;">Sin elementos guardados aún.</li>';
+    return;
+  }
+  entries.sort((a,b)=> parseNumero(b[1]&&b[1].autosPorServicio) - parseNumero(a[1]&&a[1].autosPorServicio));
+  entries.forEach(([key, raw])=>{
+    const descripcion = (raw && raw.descripcion) ? String(raw.descripcion) : "";
+    const autosPorServicio = raw && raw.autosPorServicio !== undefined ? parseNumero(raw.autosPorServicio) : 0;
+    const precio = raw && raw.precio !== undefined ? parseNumero(raw.precio) : 0;
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <div class="chip-regla-info">
+        <div class="chip-regla-top"><span class="lbl">${escapeHtml(descripcion)}</span></div>
+        <div class="chip-regla-sub">Autos por servicio comisionable: ${autosPorServicio} · Precio: ${formatoMoneda(precio)}</div>
+      </div>`;
+    const delBtn = document.createElement("button");
+    delBtn.className = "del";
+    delBtn.innerHTML = "&times;";
+    delBtn.onclick = ()=> refs.parametros.child(key).remove();
+    li.appendChild(delBtn);
+    el.appendChild(li);
+  });
+}
+
+refs.codigosMeta.on("value", snap=>{
+  cache.codigosMeta = snap.val() || {};
+  renderCodigosMeta();
+  if(typeof renderParametroMeta === "function") renderParametroMeta();
+});
+
+refs.parametros.on("value", snap=>{
+  cache.parametros = snap.val() || {};
+  renderParametros();
+  if(typeof renderParametroMeta === "function") renderParametroMeta();
+});
+
+refs.codigosPF.on("value", snap=>{
+  cache.codigosPF = snap.val() || {};
+  renderReglasPF();
+  if(typeof renderPreciosFijos === "function") renderPreciosFijos();
+});
+
+["codigos","codigosTec","codigosAutos","usuarios"].forEach(kind=>{
+  refs[kind].on("value", snap=>{
+    cache[kind] = snap.val() || {};
+    if(kind === "codigos"){
+      renderReglas();
+      if(typeof renderPagoComisiones === "function") renderPagoComisiones();
+    } else if(kind === "codigosTec"){
+      renderReglasTec();
+      if(typeof renderComisionesTecnicos === "function") renderComisionesTecnicos();
+    } else if(kind === "codigosAutos"){
+      renderList(kind);
+      if(typeof renderTotalAutos === "function") renderTotalAutos();
+    } else {
+      renderList(kind);
+      fillSelect("fUsuario", cache.usuarios);
+      fillSelect("pagoUsuario", cache.usuarios);
+      fillSelect("pfUsuario", cache.usuarios);
+    }
+  });
+});
+
+/* ---------- Activar/desactivar tablas (PC / PT) ---------- */
+function aplicarEstadoTabla(activo, checkboxId, estadoId, bentoId){
+  document.getElementById(checkboxId).checked = activo;
+  document.getElementById(estadoId).textContent = activo ? "Activada" : "Desactivada";
+  const bento = document.getElementById(bentoId);
+  if(bento) bento.style.display = activo ? "" : "none";
+}
+
+refToggles.on("value", snap=>{
+  const val = snap.val() || {};
+  const pagoComisionesActivo = val.pagoComisiones !== false; // por defecto activado
+  const pagoTecnicosActivo = val.pagoTecnicos !== false; // por defecto activado
+
+  aplicarEstadoTabla(pagoComisionesActivo, "togglePagoComisiones", "estadoTablaPC", "bentoPagoComisiones");
+  aplicarEstadoTabla(pagoTecnicosActivo, "togglePagoTecnicos", "estadoTablaPT", "bentoPagoTecnicos");
+
+  const gridTec = document.getElementById("gridPagoTecnicos");
+  if(gridTec) gridTec.style.display = pagoTecnicosActivo ? "" : "none";
+});
+
+function toggleTablaPC(){
+  const activo = document.getElementById("togglePagoComisiones").checked;
+  refToggles.update({ pagoComisiones: activo });
+}
+
+function toggleTablaPT(){
+  const activo = document.getElementById("togglePagoTecnicos").checked;
+  refToggles.update({ pagoTecnicos: activo });
+}
+
+function fillSelect(selectId, obj){
+  const sel = document.getElementById(selectId);
+  const current = sel.value;
+  const placeholder = sel.options[0];
+  sel.innerHTML = "";
+  sel.appendChild(placeholder);
+  Object.entries(obj).sort((a,b)=>(a[1]||"").localeCompare(b[1]||"",'es')).forEach(([key,val])=>{
+    const opt = document.createElement("option");
+    opt.value = val;
+    opt.textContent = val;
+    sel.appendChild(opt);
+  });
+  if([...sel.options].some(o=>o.value===current)) sel.value = current;
+}
+
+function addOnEnter(inputId, kind){
+  document.getElementById(inputId).addEventListener("keydown", e=>{
+    if(e.key === "Enter") addItem(kind, inputId);
+  });
+}
+["inCodigo","inPrecio","inMeta","inPrecioMenor"].forEach(id=>{
+  document.getElementById(id).addEventListener("keydown", e=>{
+    if(e.key === "Enter") agregarRegla();
+  });
+});
+["inCodigoTec","inPrecioTec","inMetaTec","inPrecioMenorTec"].forEach(id=>{
+  document.getElementById(id).addEventListener("keydown", e=>{
+    if(e.key === "Enter") agregarReglaTec();
+  });
+});
+["inCodigoPF","inPrecioPF","inMetaPF","inPrecioMenorPF"].forEach(id=>{
+  document.getElementById(id).addEventListener("keydown", e=>{
+    if(e.key === "Enter") agregarReglaPF();
+  });
+});
+addOnEnter("inUsuario","usuarios");
+addOnEnter("inCodigoAuto","codigosAutos");
+["inCodigoMeta","inPrecioBaseMeta","inPrecioFijoMeta"].forEach(id=>{
+  document.getElementById(id).addEventListener("keydown", e=>{
+    if(e.key === "Enter") agregarCodigoMeta();
+  });
+});
+["inParamDescripcion","inParamAutos"].forEach(id=>{
+  document.getElementById(id).addEventListener("keydown", e=>{
+    if(e.key === "Enter") agregarParametro();
+  });
+});
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+/* ---------- Subir PDF ---------- */
+const dropzone = document.getElementById("dropzone");
+const fPdf = document.getElementById("fPdf");
+const fname = document.getElementById("fname");
+
+dropzone.addEventListener("click", ()=>fPdf.click());
+dropzone.addEventListener("dragover", e=>{e.preventDefault(); dropzone.classList.add("drag");});
+dropzone.addEventListener("dragleave", ()=>dropzone.classList.remove("drag"));
+dropzone.addEventListener("drop", e=>{
+  e.preventDefault();
+  dropzone.classList.remove("drag");
+  if(e.dataTransfer.files.length){
+    fPdf.files = e.dataTransfer.files;
+    updateFname();
+  }
+});
+fPdf.addEventListener("change", updateFname);
+function updateFname(){
+  fname.textContent = fPdf.files.length ? fPdf.files[0].name : "";
+}
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+function showMsg(text, type){
+  const el = document.getElementById("uploadMsg");
+  el.textContent = text;
+  el.className = "msg show " + type;
+}
+function clearMsg(){
+  const el = document.getElementById("uploadMsg");
+  el.className = "msg";
+}
+
+async function extraerLineasPdf(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  const lineas = [];
+  for(let p=1; p<=pdf.numPages; p++){
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    const porY = {};
+    content.items.forEach(item=>{
+      if(!item.str || !item.str.trim()) return;
+      const y = Math.round(item.transform[5]);
+      if(!porY[y]) porY[y] = [];
+      porY[y].push({x:item.transform[4], str:item.str});
+    });
+    Object.keys(porY).map(Number).sort((a,b)=>b-a).forEach(y=>{
+      const tokens = porY[y].sort((a,b)=>a.x-b.x).map(t=>t.str.trim()).filter(Boolean);
+      lineas.push(tokens.join(" "));
+    });
+  }
+  return lineas;
+}
+
+function parseLinea(linea){
+  // Cod  Descripcion...  Ctd  Total
+  const m = linea.match(/^(\S+)\s+(.+?)\s+([\d,]+)\s+([\d,]+\.\d{2})\s*$/);
+  if(!m) return null;
+  return { cod: m[1], descripcion: m[2].trim(), ctd: m[3], total: m[4] };
+}
+
+function buscarFechaPdf(lineas){
+  const patronFecha = /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/;
+  for(let i=0; i<lineas.length; i++){
+    if(/Fecha/i.test(lineas[i])){
+      const mismaLinea = lineas[i].match(patronFecha);
+      if(mismaLinea) return mismaLinea[1];
+      for(let d=1; d<=3; d++){
+        if(lineas[i+d]){
+          const m2 = lineas[i+d].match(patronFecha);
+          if(m2) return m2[1];
+        }
+        if(lineas[i-d]){
+          const m3 = lineas[i-d].match(patronFecha);
+          if(m3) return m3[1];
+        }
+      }
+    }
+  }
+  // Respaldo: primera fecha con formato dd/mm/aaaa que aparezca en el documento
+  for(const linea of lineas){
+    const m = linea.match(patronFecha);
+    if(m) return m[1];
+  }
+  return "";
+}
+
+// Etiquetas conocidas del encabezado del PDF; una línea que empiece con alguna
+// de ellas nunca debe tomarse como el "valor" de otra etiqueta distinta.
+const ETIQUETAS_PDF = ["Sucursal","Usuario","Fecha"];
+function esLineaDeOtraEtiqueta(linea){
+  return ETIQUETAS_PDF.some(et => new RegExp("^\\s*"+et+"\\s*:","i").test(linea));
+}
+
+function buscarValorEtiquetaPdf(lineas, etiqueta){
+  const reMismaLinea = new RegExp(etiqueta + "\\s*:\\s*(.+)", "i");
+  const reSoloEtiqueta = new RegExp("^\\s*" + etiqueta + "\\s*:?\\s*$", "i");
+
+  // 1) "Etiqueta: valor" en la misma línea
+  for(let i=0; i<lineas.length; i++){
+    const m = lineas[i].match(reMismaLinea);
+    if(m && m[1] && m[1].trim()) return m[1].trim();
+  }
+  // 2) Etiqueta sola (sin valor en su línea): revisa líneas cercanas,
+  //    primero hacia atrás y luego hacia adelante, ignorando líneas que
+  //    en realidad pertenecen a otra etiqueta conocida.
+  for(let i=0; i<lineas.length; i++){
+    if(!reSoloEtiqueta.test(lineas[i])) continue;
+    for(let d=1; d<=3; d++){
+      const candidato = lineas[i-d];
+      if(candidato && candidato.trim() && !esLineaDeOtraEtiqueta(candidato)) return candidato.trim();
+    }
+    for(let d=1; d<=3; d++){
+      const candidato = lineas[i+d];
+      if(candidato && candidato.trim() && !esLineaDeOtraEtiqueta(candidato)) return candidato.trim();
+    }
+  }
+  return "";
+}
+
+function buscarSucursalPdf(lineas){
+  return buscarValorEtiquetaPdf(lineas, "Sucursal");
+}
+
+function buscarUsuarioPdf(lineas){
+  return buscarValorEtiquetaPdf(lineas, "Usuario");
+}
+
+function extraerFechaSucursalPdf(lineas){
+  return {
+    fechaPdf: buscarFechaPdf(lineas),
+    sucursalPdf: buscarSucursalPdf(lineas),
+    usuarioPdf: buscarUsuarioPdf(lineas)
+  };
+}
+
+const ADMIN_PASSWORD = "No26C";
+const BORRAR_PASSWORD = "Man26C";
+
+async function procesarPdf(){
+  clearMsg();
+  const usuario = document.getElementById("fUsuario").value;
+  const file = fPdf.files[0];
+
+  if(!usuario){ showMsg("Selecciona un usuario.", "err"); return; }
+  if(!file){ showMsg("Selecciona un archivo PDF.", "err"); return; }
+
+  const codigosGuardados = getCodigosIndividuales();
+  if(codigosGuardados.length === 0){
+    showMsg('No hay ningún "Cod" guardado en Configuración. Agrega al menos uno antes de subir un PDF.', "err");
+    return;
+  }
+
+  const LIMITE_MB = 15;
+  if(file.size > LIMITE_MB * 1024 * 1024){
+    showMsg(`El PDF pesa más de ${LIMITE_MB} MB. Usa un archivo más ligero.`, "err");
+    return;
+  }
+
+  const btn = document.getElementById("btnEnviar");
+  btn.disabled = true;
+  showMsg("Leyendo PDF…", "info");
+
+  try{
+    const lineas = await extraerLineasPdf(file);
+    const encontrados = [];
+    const codigosAutosGuardados = getCodigosAutos();
+    const encontradosAutos = [];
+    const codigosMetaGuardados = getCodigosMetaIndividuales();
+    const encontradosMeta = [];
+    lineas.forEach(linea=>{
+      const parsed = parseLinea(linea);
+      if(!parsed) return;
+      if(codigosGuardados.includes(parsed.cod)){
+        encontrados.push(parsed);
+      }
+      if(codigosAutosGuardados.includes(parsed.cod)){
+        encontradosAutos.push(parsed);
+      }
+      if(codigosMetaGuardados.includes(parsed.cod)){
+        encontradosMeta.push(parsed);
+      }
+    });
+
+    const { fechaPdf, sucursalPdf, usuarioPdf } = extraerFechaSucursalPdf(lineas);
+
+    // La duplicidad se evalúa únicamente sobre FECHA PDF, SUCURSAL PDF y USUARIO PDF.
+    // La columna "Usuario" (seleccionada manualmente) queda excluida de esta restricción.
+    const yaExiste = Object.values(concentradoCache || {}).some(r =>
+      (r.fechaPdf||"") === (fechaPdf||"") &&
+      (r.sucursalPdf||"") === (sucursalPdf||"") &&
+      (r.usuarioPdf||"") === (usuarioPdf||"")
+    );
+
+    const filasAGuardar = encontrados.length > 0
+      ? encontrados
+      : [{ cod: "-", descripcion: "-", ctd: "-", total: "-" }];
+
+    const datosGuardado = {
+      usuario, file,
+      fechaPdf, sucursalPdf, usuarioPdf,
+      filasAGuardar, encontrados, encontradosAutos, encontradosMeta
+    };
+
+    if(yaExiste){
+      showMsg("No dupliques la información 😠", "err");
+      btn.disabled = false;
+      abrirModalAutorizar(
+        "Esta información está duplicada. Ingresa la contraseña de administrador para guardarla de todos modos.",
+        () => guardarEnConcentrado(datosGuardado, true)
+      );
+      return;
+    }
+
+    await guardarEnConcentrado(datosGuardado, false);
+  }catch(err){
+    console.error(err);
+    showMsg("Error: " + (err && err.message ? err.message : "no se pudo leer o guardar el PDF."), "err");
+    btn.disabled = false;
+  }
+}
+
+async function guardarEnConcentrado(datos, duplicado){
+  const { usuario, file, fechaPdf, sucursalPdf, usuarioPdf, filasAGuardar, encontrados, encontradosAutos, encontradosMeta } = datos;
+  const btn = document.getElementById("btnEnviar");
+  btn.disabled = true;
+
+  try{
+    showMsg("Guardando PDF…", "info");
+    const stamp = Date.now();
+    const dataUrl = await fileToDataUrl(file);
+
+    const pdfKey = db.ref("pdfs").push().key;
+    await db.ref("pdfs/"+pdfKey).set({
+      nombre: file.name,
+      data: dataUrl,
+      creado: stamp
+    });
+
+    showMsg("Guardando registros…", "info");
+    const updates = {};
+    filasAGuardar.forEach(row=>{
+      const key = db.ref("concentrado").push().key;
+      updates[key] = {
+        usuario,
+        fechaPdf, sucursalPdf, usuarioPdf,
+        cod: row.cod,
+        descripcion: row.descripcion,
+        ctd: row.ctd,
+        total: row.total,
+        pdfId: pdfKey,
+        pdfName: file.name,
+        creado: stamp,
+        duplicado: !!duplicado
+      };
+    });
+    await db.ref("concentrado").update(updates);
+
+    if(encontradosAutos && encontradosAutos.length > 0){
+      const updatesAutos = {};
+      encontradosAutos.forEach(row=>{
+        const key = db.ref("concentradoAutos").push().key;
+        updatesAutos[key] = {
+          usuario,
+          fechaPdf, sucursalPdf, usuarioPdf,
+          cod: row.cod,
+          descripcion: row.descripcion,
+          ctd: row.ctd,
+          pdfId: pdfKey,
+          pdfName: file.name,
+          creado: stamp,
+          duplicado: !!duplicado
+        };
+      });
+      await db.ref("concentradoAutos").update(updatesAutos);
+    }
+
+    if(encontradosMeta && encontradosMeta.length > 0){
+      const updatesMeta = {};
+      encontradosMeta.forEach(row=>{
+        const key = db.ref("concentradoMeta").push().key;
+        updatesMeta[key] = {
+          usuario,
+          fechaPdf, sucursalPdf, usuarioPdf,
+          cod: row.cod,
+          descripcion: row.descripcion,
+          ctd: row.ctd,
+          pdfId: pdfKey,
+          pdfName: file.name,
+          creado: stamp,
+          duplicado: !!duplicado
+        };
+      });
+      await db.ref("concentradoMeta").update(updatesMeta);
+    }
+
+    if(encontrados.length > 0){
+      showMsg(`Se agregaron ${encontrados.length} renglón(es) al Concentrado, con el PDF adjunto.`, "ok");
+    } else {
+      showMsg("No se encontró ningún renglón que coincida con los códigos guardados en Configuración. Se agregó un registro con Cod, Descripción, Ctd y Total marcados como \"-\", con el PDF adjunto.", "info");
+    }
+    fPdf.value = "";
+    fname.textContent = "";
+  }catch(err){
+    console.error(err);
+    showMsg("Error: " + (err && err.message ? err.message : "no se pudo leer o guardar el PDF."), "err");
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+/* ---------- Modal Autorizar ---------- */
+const authOverlay = document.getElementById("authOverlay");
+const authDesc = document.getElementById("authDesc");
+const authPass = document.getElementById("authPass");
+const authErr = document.getElementById("authErr");
+let pendingAction = null; // función a ejecutar tras autorizar con la contraseña
+let pendingPassword = ADMIN_PASSWORD; // contraseña requerida para la acción pendiente
+
+function abrirModalAutorizar(mensaje, callback, password){
+  authDesc.textContent = mensaje;
+  pendingAction = callback;
+  pendingPassword = password || ADMIN_PASSWORD;
+  authPass.value = "";
+  authErr.textContent = "";
+  authOverlay.classList.add("show");
+  setTimeout(()=>authPass.focus(), 50);
+}
+
+function cerrarModalAutorizar(){
+  authOverlay.classList.remove("show");
+  authPass.value = "";
+  authErr.textContent = "";
+  pendingAction = null;
+  pendingPassword = ADMIN_PASSWORD;
+}
+
+document.getElementById("authCancelBtn").addEventListener("click", ()=>{
+  cerrarModalAutorizar();
+});
+
+document.getElementById("authAcceptBtn").addEventListener("click", async ()=>{
+  if(!pendingAction) { cerrarModalAutorizar(); return; }
+  if(authPass.value !== pendingPassword){
+    authErr.textContent = "Contraseña incorrecta.";
+    authPass.value = "";
+    authPass.focus();
+    return;
+  }
+  const accion = pendingAction;
+  pendingAction = null;
+  pendingPassword = ADMIN_PASSWORD;
+  authOverlay.classList.remove("show");
+  authPass.value = "";
+  authErr.textContent = "";
+  await accion();
+});
+
+authPass.addEventListener("keydown", e=>{
+  if(e.key === "Enter"){ e.preventDefault(); document.getElementById("authAcceptBtn").click(); }
+  if(e.key === "Escape"){ e.preventDefault(); document.getElementById("authCancelBtn").click(); }
+});
+
+/* ---------- Eliminar / Editar renglones (protegido con contraseña) ---------- */
+function solicitarEliminar(key){
+  abrirModalAutorizar(
+    "Ingresa la contraseña de administrador para eliminar este registro.",
+    async ()=>{
+      try{
+        await db.ref("concentrado/"+key).remove();
+      }catch(err){
+        console.error(err);
+        alert("No se pudo eliminar el registro.");
+      }
+    }
+  );
+}
+
+function solicitarEditar(key){
+  const row = concentradoCache[key];
+  if(!row) return;
+  abrirModalAutorizar(
+    "Ingresa la contraseña de administrador para editar este registro.",
+    ()=> abrirModalEditar(key, row)
+  );
+}
+
+/* ---------- Modal Editar registro ---------- */
+const editOverlay = document.getElementById("editOverlay");
+const editErr = document.getElementById("editErr");
+let editingKey = null;
+let editingOriginal = null;
+
+function abrirModalEditar(key, row){
+  editingKey = key;
+  editingOriginal = row;
+  document.getElementById("editFechaPdf").value = row.fechaPdf || "";
+  document.getElementById("editSucursalPdf").value = row.sucursalPdf || "";
+  document.getElementById("editUsuarioPdf").value = row.usuarioPdf || "";
+  document.getElementById("editUsuario").value = row.usuario || "";
+  document.getElementById("editCod").value = row.cod || "";
+  document.getElementById("editDescripcion").value = row.descripcion || "";
+  document.getElementById("editCtd").value = row.ctd || "";
+  document.getElementById("editTotal").value = row.total || "";
+  editErr.textContent = "";
+  editOverlay.classList.add("show");
+}
+
+function cerrarModalEditar(){
+  editOverlay.classList.remove("show");
+  editingKey = null;
+  editingOriginal = null;
+}
+
+document.getElementById("editCancelBtn").addEventListener("click", cerrarModalEditar);
+
+document.getElementById("editSaveBtn").addEventListener("click", async ()=>{
+  if(!editingKey){ cerrarModalEditar(); return; }
+  const nuevo = {
+    fechaPdf: document.getElementById("editFechaPdf").value.trim(),
+    sucursalPdf: document.getElementById("editSucursalPdf").value.trim(),
+    usuarioPdf: document.getElementById("editUsuarioPdf").value.trim(),
+    usuario: document.getElementById("editUsuario").value.trim(),
+    cod: document.getElementById("editCod").value.trim(),
+    descripcion: document.getElementById("editDescripcion").value.trim(),
+    ctd: document.getElementById("editCtd").value.trim(),
+    total: document.getElementById("editTotal").value.trim()
+  };
+
+  // Marca en rojo (de forma permanente) cada campo cuyo valor cambió respecto al original.
+  const original = editingOriginal || {};
+  const camposEditados = new Set(original.camposEditados || []);
+  Object.keys(nuevo).forEach(campo=>{
+    if((original[campo]||"") !== (nuevo[campo]||"")) camposEditados.add(campo);
+  });
+  nuevo.camposEditados = Array.from(camposEditados);
+
+  try{
+    await db.ref("concentrado/"+editingKey).update(nuevo);
+    cerrarModalEditar();
+  }catch(err){
+    console.error(err);
+    editErr.textContent = "No se pudo guardar el cambio.";
+  }
+});
+
+function fileToDataUrl(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=> resolve(reader.result);
+    reader.onerror = ()=> reject(new Error("No se pudo leer el archivo."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function dataUrlToBlob(dataUrl){
+  const [meta, b64] = dataUrl.split(",");
+  const mime = (meta.match(/data:(.*?);base64/) || [,"application/pdf"])[1];
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for(let i=0; i<bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], {type: mime});
+}
+
+async function abrirPdf(pdfId){
+  try{
+    const snap = await db.ref("pdfs/"+pdfId).once("value");
+    const record = snap.val();
+    if(!record || !record.data){
+      alert("No se encontró el PDF guardado.");
+      return;
+    }
+    const blob = dataUrlToBlob(record.data);
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    setTimeout(()=>URL.revokeObjectURL(url), 60000);
+  }catch(err){
+    console.error(err);
+    alert("No se pudo abrir el PDF.");
+  }
+}
+
+/* ---------- Selector múltiple (checkboxes) de Sucursal PDF ---------- */
+class MultiSel{
+  constructor(id){
+    this.el = document.getElementById(id);
+    this.placeholder = this.el.dataset.placeholder || "Todas";
+    this.selected = new Set();
+    this.options = [];
+    this.build();
+  }
+  build(){
+    this.el.innerHTML = `
+      <button type="button" class="msel-btn"><span class="msel-txt"></span>
+        <svg class="msel-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="msel-panel">
+        <input type="text" class="msel-search" placeholder="Buscar sucursal...">
+        <div class="msel-actions">
+          <button type="button" data-a="all">Seleccionar todas</button>
+          <button type="button" data-a="none">Limpiar</button>
+        </div>
+        <div class="msel-list"></div>
+      </div>`;
+    this.btn = this.el.querySelector(".msel-btn");
+    this.txt = this.el.querySelector(".msel-txt");
+    this.panel = this.el.querySelector(".msel-panel");
+    this.search = this.el.querySelector(".msel-search");
+    this.list = this.el.querySelector(".msel-list");
+    this.btn.addEventListener("click", ()=>{
+      const abrir = !this.el.classList.contains("open");
+      MultiSel.cerrarTodos();
+      if(abrir){ this.el.classList.add("open"); this.search.value = ""; this.renderList(); this.search.focus(); }
+    });
+    this.search.addEventListener("input", ()=> this.renderList());
+    this.panel.addEventListener("click", e=>{
+      const b = e.target.closest("button[data-a]");
+      if(!b) return;
+      if(b.dataset.a === "all"){
+        const q = this.search.value.trim().toLowerCase();
+        this.options.filter(o=> !q || o.toLowerCase().includes(q)).forEach(o=> this.selected.add(o));
+      } else {
+        this.selected.clear();
+      }
+      this.renderList(); this.refreshText(); this.emit();
+    });
+    this.list.addEventListener("change", e=>{
+      const cb = e.target.closest("input[type=checkbox]");
+      if(!cb) return;
+      if(cb.checked) this.selected.add(cb.value); else this.selected.delete(cb.value);
+      this.refreshText(); this.emit();
+    });
+    this.refreshText();
+  }
+  static cerrarTodos(){ document.querySelectorAll(".msel.open").forEach(x=> x.classList.remove("open")); }
+  emit(){ this.el.dispatchEvent(new Event("change", { bubbles:false })); }
+  renderList(){
+    const q = this.search.value.trim().toLowerCase();
+    const vis = this.options.filter(o=> !q || o.toLowerCase().includes(q));
+    this.list.innerHTML = "";
+    if(!vis.length){ this.list.innerHTML = '<div class="msel-empty">Sin resultados</div>'; return; }
+    vis.forEach(o=>{
+      const lb = document.createElement("label");
+      lb.className = "msel-opt";
+      const cb = document.createElement("input");
+      cb.type = "checkbox"; cb.value = o; cb.checked = this.selected.has(o);
+      const sp = document.createElement("span"); sp.textContent = o;
+      lb.appendChild(cb); lb.appendChild(sp);
+      this.list.appendChild(lb);
+    });
+  }
+  refreshText(){
+    const n = this.selected.size;
+    this.txt.textContent = n === 0 ? this.placeholder : (n === 1 ? Array.from(this.selected)[0] : n + " sucursales seleccionadas");
+    this.el.classList.toggle("has-sel", n > 0);
+  }
+  setOptions(valores){
+    const arr = Array.from(valores).sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));
+    if(arr.join("\u0001") === this.options.join("\u0001")) return;
+    this.options = arr;
+    Array.from(this.selected).forEach(v=>{ if(!arr.includes(v)) this.selected.delete(v); });
+    this.refreshText();
+    if(this.el.classList.contains("open")) this.renderList();
+  }
+  clear(silencioso){
+    this.selected.clear(); this.refreshText();
+    if(this.el.classList.contains("open")) this.renderList();
+    if(!silencioso) this.emit();
+  }
+  /* true si no hay selección (todas) o si la sucursal está entre las seleccionadas */
+  match(valor){ return this.selected.size === 0 || this.selected.has(valor||""); }
+}
+document.addEventListener("click", e=>{ if(!e.target.closest(".msel")) MultiSel.cerrarTodos(); });
+document.addEventListener("keydown", e=>{ if(e.key === "Escape") MultiSel.cerrarTodos(); });
+
+const msRegistros = new MultiSel("filtroSucursalPdf");
+const msAutos     = new MultiSel("autosSucursal");
+const msPago      = new MultiSel("pagoSucursal");
+const msMeta      = new MultiSel("metaSucursal");
+const msPF        = new MultiSel("pfSucursal");
+
+function refrescarSucursalesMulti(){
+  const set = new Set();
+  [concentradoCache, concentradoAutosCache, concentradoMetaCache].forEach(c=>{
+    Object.values(c || {}).forEach(row=>{ if(row && row.sucursalPdf) set.add(row.sucursalPdf); });
+  });
+  [msRegistros, msAutos, msPago, msMeta, msPF].forEach(m=> m.setOptions(set));
+}
+
+/* ---------- Concentrado ---------- */
+const concBody = document.getElementById("concBody");
+const statCount = document.getElementById("statCount");
+const statSucursales = document.getElementById("statSucursales");
+const filtroFechaPdf = document.getElementById("filtroFechaPdf");
+const filtroSucursalPdf = document.getElementById("filtroSucursalPdf");
+const filtroUsuario = document.getElementById("filtroUsuario");
+let concentradoCache = {};
+let ultimoRegistrosFiltrados = [];
+
+function poblarSelectFiltro(selectEl, valores, placeholder){
+  const actual = selectEl.value;
+  selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+  Array.from(valores).sort((a,b)=>a.localeCompare(b,'es',{numeric:true})).forEach(v=>{
+    const opt = document.createElement("option");
+    opt.value = v;
+    opt.textContent = v;
+    selectEl.appendChild(opt);
+  });
+  if(Array.from(selectEl.options).some(o=>o.value===actual)) selectEl.value = actual;
+}
+
+function renderConcentrado(){
+  const data = concentradoCache;
+  const todasEntries = Object.entries(data).sort((a,b)=> (b[1].creado||0) - (a[1].creado||0));
+
+  // Poblar las opciones de los filtros con los valores existentes en los datos.
+  const fechasSet = new Set(), sucursalesSet = new Set(), usuariosSet = new Set();
+  todasEntries.forEach(([,row])=>{
+    if(row.fechaPdf) fechasSet.add(row.fechaPdf);
+    if(row.sucursalPdf) sucursalesSet.add(row.sucursalPdf);
+    if(row.usuario) usuariosSet.add(row.usuario);
+  });
+  poblarSelectFiltro(filtroFechaPdf, fechasSet, "Todas");
+  refrescarSucursalesMulti();
+  poblarSelectFiltro(filtroUsuario, usuariosSet, "Todos");
+  if(pagoSucursalTec) poblarSelectFiltro(pagoSucursalTec, sucursalesSet, "Todas las sucursales");
+
+  const fFechaPdf = filtroFechaPdf.value;
+  const fUsuario = filtroUsuario.value;
+
+  const entries = todasEntries.filter(([,row])=>
+    (!fFechaPdf || row.fechaPdf === fFechaPdf) &&
+    msRegistros.match(row.sucursalPdf) &&
+    (!fUsuario || row.usuario === fUsuario)
+  );
+
+  ultimoRegistrosFiltrados = entries.map(([,row])=>row);
+
+  concBody.innerHTML = "";
+
+  if(entries.length === 0){
+    const mensaje = todasEntries.length === 0
+      ? 'Aún no hay registros. Sube un PDF en la sección "Subir PDF".'
+      : 'Ningún registro coincide con los filtros seleccionados.';
+    concBody.innerHTML = `<tr><td colspan="10" class="empty-hint">${mensaje}</td></tr>`;
+    statCount.textContent = "0";
+    statSucursales.textContent = "0";
+    return;
+  }
+
+  const sucursalesUnicas = new Set();
+  entries.forEach(([key, row])=>{
+    if(row.sucursalPdf) sucursalesUnicas.add(row.sucursalPdf);
+    const tr = document.createElement("tr");
+    if(row.duplicado) tr.classList.add("dup-row");
+    const ce = (campo, extra)=>{
+      const classes = [];
+      if(extra) classes.push(extra);
+      if(row.camposEditados && row.camposEditados.includes(campo)) classes.push("cell-edited");
+      return classes.length ? ` class="${classes.join(' ')}"` : "";
+    };
+    tr.innerHTML = `
+      <td${ce('fechaPdf')}>${escapeHtml(row.fechaPdf||"—")}</td>
+      <td${ce('sucursalPdf')}>${escapeHtml(row.sucursalPdf||"—")}</td>
+      <td${ce('usuarioPdf')}>${escapeHtml(row.usuarioPdf||"—")}</td>
+      <td${ce('usuario')}>${escapeHtml(row.usuario||"")}</td>
+      <td${ce('cod','code')}>${escapeHtml(row.cod||"")}</td>
+      <td${ce('descripcion')}>${escapeHtml(row.descripcion||"")}</td>
+      <td${ce('ctd','num')}>${escapeHtml(row.ctd||"")}</td>
+      <td>${row.pdfId ? `<a class="pdf-link" href="javascript:void(0)" onclick="abrirPdf('${row.pdfId}')" title="${escapeHtml(row.pdfName||'Abrir PDF')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>Ver PDF</a>` : '<span class="pdf-pending">—</span>'}</td>
+      <td><button class="row-action del" onclick="solicitarEliminar('${key}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Eliminar</button></td>
+      <td><button class="row-action edit" onclick="solicitarEditar('${key}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Editar</button></td>
+    `;
+    concBody.appendChild(tr);
+  });
+  statCount.textContent = entries.length.toString();
+  statSucursales.textContent = sucursalesUnicas.size.toString();
+}
+
+db.ref("concentrado").on("value", snap=>{
+  concentradoCache = snap.val() || {};
+  renderConcentrado();
+  poblarFechasPago();
+  poblarFechasEliminarPdf();
+  if(typeof poblarFechasEliminarRegistros === "function") poblarFechasEliminarRegistros();
+  renderPagoComisiones();
+  renderComisionesTecnicos();
+  if(typeof renderTotalAutos === "function") renderTotalAutos();
+});
+
+[filtroFechaPdf, filtroSucursalPdf, filtroUsuario].forEach(sel=>{
+  sel.addEventListener("change", renderConcentrado);
+});
+
+document.getElementById("btnLimpiarFiltros").addEventListener("click", ()=>{
+  filtroFechaPdf.value = "";
+  msRegistros.clear(true);
+  filtroUsuario.value = "";
+  renderConcentrado();
+});
+
+/* ---------- Pago de comisiones ---------- */
+const pagoDesde = document.getElementById("pagoDesde");
+const pagoHasta = document.getElementById("pagoHasta");
+const pagoUsuario = document.getElementById("pagoUsuario");
+const pagoBody = document.getElementById("pagoBody");
+const pagoTotalPill = document.getElementById("pagoTotalPill");
+let ultimoPagoExport = [];
+
+const pagoDesdeTec = document.getElementById("pagoDesdeTec");
+const pagoHastaTec = document.getElementById("pagoHastaTec");
+const pagoSucursalTec = document.getElementById("pagoSucursalTec");
+const pagoBodyTec = document.getElementById("pagoBodyTec");
+const pagoTotalPillTec = document.getElementById("pagoTotalPillTec");
+let ultimoPagoTecExport = [];
+
+const pfDesde = document.getElementById("pfDesde");
+const pfHasta = document.getElementById("pfHasta");
+const pfUsuario = document.getElementById("pfUsuario");
+const pfBody = document.getElementById("pfBody");
+const pfTotalPill = document.getElementById("pfTotalPill");
+let ultimoPFExport = [];
+
+function parseFechaPdfADate(str){
+  if(!str) return null;
+  const m = String(str).trim().match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if(!m) return null;
+  let d = parseInt(m[1],10), mo = parseInt(m[2],10), y = parseInt(m[3],10);
+  if(y < 100) y += (y < 70 ? 2000 : 1900);
+  const dt = new Date(y, mo-1, d);
+  return isNaN(dt.getTime()) ? null : dt;
+}
+
+function parseNumero(val){
+  if(val === undefined || val === null) return 0;
+  const n = parseFloat(String(val).replace(/,/g, "").trim());
+  return isNaN(n) ? 0 : n;
+}
+
+function poblarFechasPago(){
+  const fechasMap = new Map();
+  Object.values(concentradoCache || {}).forEach(row=>{
+    if(!row.fechaPdf) return;
+    const dt = parseFechaPdfADate(row.fechaPdf);
+    if(dt) fechasMap.set(row.fechaPdf, dt);
+  });
+  const ordenadas = Array.from(fechasMap.entries()).sort((a,b)=> a[1]-b[1]).map(e=>e[0]);
+  [pagoDesde, pagoHasta, pagoDesdeTec, pagoHastaTec, pfDesde, pfHasta].forEach(sel=>{
+    const actual = sel.value;
+    const placeholder = sel.options[0];
+    sel.innerHTML = "";
+    sel.appendChild(placeholder);
+    ordenadas.forEach(f=>{
+      const opt = document.createElement("option");
+      opt.value = f;
+      opt.textContent = f;
+      sel.appendChild(opt);
+    });
+    if(Array.from(sel.options).some(o=>o.value===actual)) sel.value = actual;
+  });
+}
+
+function renderPagoComisiones(){
+  renderTablaComisiones({
+    sucursalMs: msPago,
+    desdeSel: pagoDesde, hastaSel: pagoHasta, filtroSel: pagoUsuario, campo: "usuario",
+    etiquetaCol: "Usuario", etiquetaVacio: "Sin usuario", columnaExport: "Usuario",
+    bodyEl: pagoBody, totalEl: pagoTotalPill, reglasFn: getReglas, columnasPdf: true, separarExtracciones: true,
+    onExport: filas=>{ ultimoPagoExport = filas; }
+  });
+}
+
+function renderComisionesTecnicos(){
+  renderTablaComisiones({
+    desdeSel: pagoDesdeTec, hastaSel: pagoHastaTec, filtroSel: pagoSucursalTec, campo: "sucursalPdf",
+    etiquetaCol: "Sucursal PDF", etiquetaVacio: "Sin sucursal", columnaExport: "Sucursal PDF",
+    bodyEl: pagoBodyTec, totalEl: pagoTotalPillTec, reglasFn: getReglasTec,
+    onExport: filas=>{ ultimoPagoTecExport = filas; }
+  });
+}
+
+function renderPreciosFijos(){
+  renderTablaComisiones({
+    sucursalMs: msPF,
+    desdeSel: pfDesde, hastaSel: pfHasta, filtroSel: pfUsuario, campo: "usuario",
+    etiquetaCol: "Usuario", etiquetaVacio: "Sin usuario", columnaExport: "Usuario",
+    bodyEl: pfBody, totalEl: pfTotalPill, reglasFn: getReglasPF, columnasPdf: true, separarExtracciones: true,
+    onExport: filas=>{ ultimoPFExport = filas; }
+  });
+}
+
+function renderTablaComisiones(cfg){
+  const { sucursalMs, desdeSel, hastaSel, filtroSel, campo: campoCfg, etiquetaCol, etiquetaVacio, columnaExport, bodyEl, totalEl, reglasFn, onExport, columnasPdf, separarExtracciones } = cfg;
+  const NCOLS = columnasPdf ? 11 : 8;
+  if(!desdeSel || !hastaSel) return;
+  const desdeVal = desdeSel.value;
+  const hastaVal = hastaSel.value;
+  const campo = campoCfg || "usuario";
+  const etiqueta = etiquetaCol || "Usuario";
+  const vacio = etiquetaVacio || "Sin usuario";
+  const colExport = columnaExport || etiqueta;
+  const filtroVal = filtroSel ? filtroSel.value : "";
+
+  if(!desdeVal && !hastaVal){
+    bodyEl.innerHTML = `<tr><td colspan="${NCOLS}" class="empty-hint">Selecciona un intervalo de fechas para calcular las comisiones.</td></tr>`;
+    totalEl.textContent = "$0.00";
+    onExport([]);
+    return;
+  }
+
+  const desdeDate = desdeVal ? parseFechaPdfADate(desdeVal) : null;
+  const hastaDate = hastaVal ? parseFechaPdfADate(hastaVal) : null;
+
+  // Filtra renglones válidos (con Cod real) dentro del intervalo de fechas.
+  const registrosFiltrados = Object.values(concentradoCache || {}).filter(row=>{
+    if(!row.cod || row.cod === "-") return false;
+    const dt = parseFechaPdfADate(row.fechaPdf);
+    if(!dt) return false;
+    if(desdeDate && dt < desdeDate) return false;
+    if(hastaDate && dt > hastaDate) return false;
+    if(filtroVal && (row[campo]||"") !== filtroVal) return false;
+    if(sucursalMs && !sucursalMs.match(row.sucursalPdf||"")) return false;
+    return true;
+  });
+
+  // Compacta por campo (Usuario o Sucursal PDF) + Cod, sumando "Ctd".
+  const grupos = {};
+  registrosFiltrados.forEach(row=>{
+    const valorCampo = row[campo]||"";
+    const key = valorCampo + "||" + (row.cod||"");
+    if(!grupos[key]){
+      grupos[key] = { valor: valorCampo, cod: row.cod||"", descripcion: row.descripcion||"", ctd: 0, fechas: new Set(), sucursales: new Set(), usuariosPdf: new Set(), registros: [] };
+    }
+    if(row.fechaPdf) grupos[key].fechas.add(row.fechaPdf);
+    if(row.sucursalPdf) grupos[key].sucursales.add(row.sucursalPdf);
+    if(row.usuarioPdf) grupos[key].usuariosPdf.add(row.usuarioPdf);
+    grupos[key].registros.push({ fecha: row.fechaPdf||"", sucursal: row.sucursalPdf||"", usuarioPdf: row.usuarioPdf||"", ctd: parseNumero(row.ctd), descripcion: row.descripcion||"" });
+    grupos[key].ctd += parseNumero(row.ctd);
+    if(!grupos[key].descripcion && row.descripcion) grupos[key].descripcion = row.descripcion;
+  });
+
+  const valoresPorCod = {};
+  Object.values(grupos).forEach(g=>{
+    if(!valoresPorCod[g.cod]) valoresPorCod[g.cod] = new Set();
+    valoresPorCod[g.cod].add(g.valor);
+  });
+
+
+  function infoPdf(g){
+    const fechas = Array.from(g.fechas).sort((a,b)=>{
+      const da = parseFechaPdfADate(a), db = parseFechaPdfADate(b);
+      return (da && db) ? da - db : String(a).localeCompare(String(b),'es');
+    });
+    return {
+      fecha: fechas.join(", "),
+      sucursal: Array.from(g.sucursales).sort((a,b)=>a.localeCompare(b,'es')).join(", "),
+      usuarioPdf: Array.from(g.usuariosPdf).sort((a,b)=>a.localeCompare(b,'es')).join(", ")
+    };
+  }
+  function filasDeGrupo(g, cod){
+    if(!separarExtracciones) return [{ cod, descripcion: g.descripcion, ctd: g.ctd, ...infoPdf(g) }];
+    return g.registros.slice().sort((a,b)=>{
+      const da = parseFechaPdfADate(a.fecha), db = parseFechaPdfADate(b.fecha);
+      return (da && db) ? da - db : 0;
+    }).map(r=>({ cod, descripcion: r.descripcion || g.descripcion, ctd: r.ctd, fecha: r.fecha, sucursal: r.sucursal, usuarioPdf: r.usuarioPdf }));
+  }
+  function celdasPdfHtml(f){
+    if(!columnasPdf) return "";
+    const c = v=> `<td class="pdf-cell" title="${escapeHtml(v)}">${escapeHtml(v||"—")}</td>`;
+    return c(f.fecha) + c(f.sucursal) + c(f.usuarioPdf);
+  }
+  function pdfExport(f){
+    return columnasPdf ? { "Fecha PDF": f.fecha||"", "Sucursal PDF": f.sucursal||"", "Usuario PDF": f.usuarioPdf||"" } : {};
+  }
+
+  const bloques = [];
+  reglasFn().forEach(regla=>{
+    const codigos = regla.codigo.split(",").map(s=>s.trim()).filter(Boolean);
+    const precio = regla.precio;
+    const meta = regla.meta;
+    if(codigos.length === 0) return;
+
+    if(codigos.length === 1){
+      // Regla simple: se paga si Ctd cumple la meta (meta 0 = siempre se paga).
+      const cod = codigos[0];
+      const valores = valoresPorCod[cod] ? Array.from(valoresPorCod[cod]) : [];
+      valores.forEach(valor=>{
+        const g = grupos[valor+"||"+cod];
+        if(!g) return;
+        const cumple = meta <= 0 || g.ctd >= meta;
+        const precioAplicado = cumple ? precio : (regla.precioMenor !== null && regla.precioMenor !== undefined ? regla.precioMenor : 0);
+        const monto = g.ctd * precioAplicado;
+        const metaLabel = meta <= 0 ? "" : (cumple ? "SI" : "NO");
+        bloques.push({
+          tipo: "simple", valor, sortCod: cod, precio: precioAplicado, suma: null, monto, metaLabel,
+          filas: filasDeGrupo(g, cod), sumaGrupo: g.ctd
+        });
+      });
+    } else {
+      // Combinatoria: se suma "Ctd" de TODOS los códigos del grupo (en el orden configurado)
+      // y esa suma total (Σ) se compara una sola vez contra la meta compartida.
+      const valoresSet = new Set();
+      codigos.forEach(cod=> (valoresPorCod[cod] || new Set()).forEach(v=> valoresSet.add(v)));
+      valoresSet.forEach(valor=>{
+        const filasGrupo = [];
+        let suma = 0;
+        codigos.forEach(cod=>{
+          const g = grupos[valor+"||"+cod];
+          if(!g) return;
+          filasDeGrupo(g, cod).forEach(x=> filasGrupo.push(x));
+          suma += g.ctd;
+        });
+        if(filasGrupo.length === 0) return;
+        const cumple = meta <= 0 || suma >= meta;
+        const precioAplicado = cumple ? precio : (regla.precioMenor !== null && regla.precioMenor !== undefined ? regla.precioMenor : 0);
+        const monto = suma * precioAplicado;
+        const metaLabel = meta <= 0 ? "" : (cumple ? "SI" : "NO");
+        bloques.push({ tipo: "combo", valor, sortCod: codigos[0], precio: precioAplicado, suma, monto, metaLabel, filas: filasGrupo });
+      });
+    }
+  });
+
+  bloques.sort((a,b)=> a.valor.localeCompare(b.valor,'es') || String(a.sortCod).localeCompare(String(b.sortCod),'es',{numeric:true}));
+
+  bodyEl.innerHTML = "";
+  if(bloques.length === 0){
+    bodyEl.innerHTML = `<tr><td colspan="${NCOLS}" class="empty-hint">Ningún registro coincide con el intervalo seleccionado.</td></tr>`;
+    totalEl.textContent = "$0.00";
+    onExport([]);
+    return;
+  }
+
+  // Agrupa los bloques (ya ordenados) por el campo elegido, para mostrar un encabezado
+  // con subtotal antes de los servicios de cada grupo.
+  const gruposValor = [];
+  bloques.forEach(bloque=>{
+    let grupo = gruposValor[gruposValor.length - 1];
+    if(!grupo || grupo.valor !== bloque.valor){
+      grupo = { valor: bloque.valor, bloques: [], subtotal: 0 };
+      gruposValor.push(grupo);
+    }
+    grupo.bloques.push(bloque);
+    grupo.subtotal += bloque.monto;
+  });
+
+  // Dentro de cada grupo, primero los servicios individuales y al final los combinados.
+  gruposValor.forEach(grupo=>{
+    grupo.bloques.sort((a,b)=>{
+      const pa = a.tipo === "combo" ? 1 : 0;
+      const pb = b.tipo === "combo" ? 1 : 0;
+      return pa - pb;
+    });
+  });
+
+  function metaBadgeHtml(metaLabel){
+    if(!metaLabel) return "";
+    const cls = metaLabel === "SI" ? "si" : "no";
+    return `<span class="meta-badge ${cls}">${escapeHtml(metaLabel)}</span>`;
+  }
+
+  let total = 0;
+  const filasExport = [];
+  gruposValor.forEach(grupo=>{
+    total += grupo.subtotal;
+
+    const trHeader = document.createElement("tr");
+    trHeader.className = "usuario-header";
+    trHeader.innerHTML = `<td colspan="${NCOLS}">
+      <div class="usuario-header-inner">
+        <span class="usuario-header-name">
+          <span class="ico-user"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></span>
+          ${escapeHtml(grupo.valor || vacio)}
+        </span>
+        <span class="usuario-header-sub">Subtotal: ${formatoMoneda(grupo.subtotal)}</span>
+      </div>
+    </td>`;
+    bodyEl.appendChild(trHeader);
+
+    let filaSimpleIdx = 0;
+    grupo.bloques.forEach(bloque=>{
+      if(bloque.tipo === "combo"){
+        const n = bloque.filas.length;
+        const trSep = document.createElement("tr");
+        trSep.className = "combo-sep";
+        trSep.innerHTML = `<td colspan="${NCOLS}">Servicios combinados</td>`;
+        bodyEl.appendChild(trSep);
+
+        bloque.filas.forEach((f, idx)=>{
+          const tr = document.createElement("tr");
+          tr.className = "combo-row";
+          let celdasMerge = "";
+          if(idx === 0){
+            celdasMerge = `
+              <td class="num combo-merge" rowspan="${n}">${bloque.suma}</td>
+              <td class="num combo-merge" rowspan="${n}">${formatoMoneda(bloque.monto)}</td>
+              <td class="combo-merge" rowspan="${n}">${metaBadgeHtml(bloque.metaLabel)}</td>
+            `;
+          }
+          tr.innerHTML = `
+            ${celdasPdfHtml(f)}
+            <td>${escapeHtml(bloque.valor)}</td>
+            <td class="code">${escapeHtml(f.cod)}</td>
+            <td class="truncate" title="${escapeHtml(f.descripcion)}">${escapeHtml(f.descripcion)}</td>
+            <td class="num">${f.ctd}</td>
+            <td class="num">${formatoMoneda(bloque.precio)}</td>
+            ${celdasMerge}
+          `;
+          bodyEl.appendChild(tr);
+          filasExport.push({
+            ...pdfExport(f),
+            [colExport]: bloque.valor,
+            Cod: f.cod,
+            Descripcion: f.descripcion,
+            Ctd: f.ctd,
+            "Precio unitario": bloque.precio,
+            "Suma (Σ)": idx === 0 ? bloque.suma : "",
+            Monto: idx === 0 ? bloque.monto : "",
+            Meta: idx === 0 ? bloque.metaLabel : "",
+            Tipo: "Combinado"
+          });
+        });
+      } else if(separarExtracciones){
+        // Un renglón por cada extracción; Σ, Monto y Meta se calculan por grupo (usuario + Cod).
+        const n = bloque.filas.length;
+        const alt = (filaSimpleIdx % 2 === 1 ? " row-alt" : "");
+        filaSimpleIdx++;
+        bloque.filas.forEach((f, idx)=>{
+          const tr = document.createElement("tr");
+          tr.className = "simple-row" + alt;
+          let celdasMerge = "";
+          if(idx === 0){
+            celdasMerge = `
+              <td class="num combo-merge" rowspan="${n}">${bloque.sumaGrupo}</td>
+              <td class="num combo-merge" rowspan="${n}">${formatoMoneda(bloque.monto)}</td>
+              <td class="combo-merge" rowspan="${n}">${metaBadgeHtml(bloque.metaLabel)}</td>
+            `;
+          }
+          tr.innerHTML = `
+            ${celdasPdfHtml(f)}
+            <td>${escapeHtml(bloque.valor)}</td>
+            <td class="code">${escapeHtml(f.cod)}</td>
+            <td class="truncate" title="${escapeHtml(f.descripcion)}">${escapeHtml(f.descripcion)}</td>
+            <td class="num">${f.ctd}</td>
+            <td class="num">${formatoMoneda(bloque.precio)}</td>
+            ${celdasMerge}
+          `;
+          bodyEl.appendChild(tr);
+          filasExport.push({
+            ...pdfExport(f),
+            [colExport]: bloque.valor,
+            Cod: f.cod,
+            Descripcion: f.descripcion,
+            Ctd: f.ctd,
+            "Precio unitario": bloque.precio,
+            "Suma (Σ)": idx === 0 ? bloque.sumaGrupo : "",
+            Monto: idx === 0 ? bloque.monto : "",
+            Meta: idx === 0 ? bloque.metaLabel : "",
+            Tipo: "Individual"
+          });
+        });
+      } else {
+        const f = bloque.filas[0];
+        const tr = document.createElement("tr");
+        tr.className = "simple-row" + (filaSimpleIdx % 2 === 1 ? " row-alt" : "");
+        filaSimpleIdx++;
+        tr.innerHTML = `
+          ${celdasPdfHtml(f)}
+          <td>${escapeHtml(bloque.valor)}</td>
+          <td class="code">${escapeHtml(f.cod)}</td>
+          <td class="truncate" title="${escapeHtml(f.descripcion)}">${escapeHtml(f.descripcion)}</td>
+          <td class="num">${f.ctd}</td>
+          <td class="num">${formatoMoneda(bloque.precio)}</td>
+          <td class="num">—</td>
+          <td class="num">${formatoMoneda(bloque.monto)}</td>
+          <td>${metaBadgeHtml(bloque.metaLabel)}</td>
+        `;
+        bodyEl.appendChild(tr);
+        filasExport.push({
+          ...pdfExport(f),
+          [colExport]: bloque.valor,
+          Cod: f.cod,
+          Descripcion: f.descripcion,
+          Ctd: f.ctd,
+          "Precio unitario": bloque.precio,
+          "Suma (Σ)": "",
+          Monto: bloque.monto,
+          Meta: bloque.metaLabel,
+          Tipo: "Individual"
+        });
+      }
+    });
+
+    filasExport.push({
+      ...pdfExport({}),
+      [colExport]: grupo.valor, Cod: "", Descripcion: "", Ctd: "", "Precio unitario": "",
+      "Suma (Σ)": "", Monto: grupo.subtotal, Meta: "", Tipo: "Subtotal " + (grupo.valor || vacio)
+    });
+  });
+  filasExport.push({
+    ...pdfExport({}),
+    [colExport]: "", Cod: "", Descripcion: "", Ctd: "", "Precio unitario": "",
+    "Suma (Σ)": "", Monto: total, Meta: "", Tipo: "TOTAL"
+  });
+  onExport(filasExport);
+  totalEl.textContent = formatoMoneda(total);
+}
+
+[pagoDesde, pagoHasta, pagoUsuario, msPago.el].forEach(sel=> sel.addEventListener("change", renderPagoComisiones));
+[pagoDesdeTec, pagoHastaTec, pagoSucursalTec].forEach(sel=> sel.addEventListener("change", renderComisionesTecnicos));
+[pfDesde, pfHasta, pfUsuario, msPF.el].forEach(sel=> sel.addEventListener("change", renderPreciosFijos));
+
+/* ---------- Total de autos (Código Σ autos) ---------- */
+const autosModo = document.getElementById("autosModo");
+const autosDesde = document.getElementById("autosDesde");
+const autosHasta = document.getElementById("autosHasta");
+const autosUsuario = document.getElementById("autosUsuario");
+const autosSucursal = document.getElementById("autosSucursal");
+const autosBody = document.getElementById("autosBody");
+const autosTotalPill = document.getElementById("autosTotalPill");
+const autosColGrupo = document.getElementById("autosColGrupo");
+const campoAutosUsuario = document.getElementById("campoAutosUsuario");
+let concentradoAutosCache = {};
+let ultimoAutosExport = [];
+
+function poblarFiltrosAutos(){
+  const fechasMap = new Map();
+  const usuariosSet = new Set(), sucursalesSet = new Set();
+  Object.values(concentradoCache || {}).forEach(row=>{
+    if(row.fechaPdf){
+      const dt = parseFechaPdfADate(row.fechaPdf);
+      if(dt) fechasMap.set(row.fechaPdf, dt);
+    }
+    if(row.usuario) usuariosSet.add(row.usuario);
+    if(row.sucursalPdf) sucursalesSet.add(row.sucursalPdf);
+  });
+  const ordenadas = Array.from(fechasMap.entries()).sort((a,b)=> a[1]-b[1]).map(e=>e[0]);
+  [autosDesde, autosHasta].forEach(sel=>{
+    const actual = sel.value;
+    const placeholder = sel.options[0];
+    sel.innerHTML = "";
+    sel.appendChild(placeholder);
+    ordenadas.forEach(f=>{
+      const opt = document.createElement("option");
+      opt.value = f;
+      opt.textContent = f;
+      sel.appendChild(opt);
+    });
+    if(Array.from(sel.options).some(o=>o.value===actual)) sel.value = actual;
+  });
+  poblarSelectFiltro(autosUsuario, usuariosSet, "Todos los usuarios");
+  refrescarSucursalesMulti();
+}
+
+function renderTotalAutos(){
+  if(!autosBody) return;
+  poblarFiltrosAutos();
+
+  const modo = autosModo.value || "1";
+  campoAutosUsuario.style.display = modo === "1" ? "" : "none";
+
+  const campo = modo === "1" ? "usuario" : "sucursalPdf";
+  const etiqueta = modo === "1" ? "Usuario" : "Sucursal PDF";
+  const vacio = modo === "1" ? "Sin usuario" : "Sin sucursal";
+  autosColGrupo.textContent = etiqueta;
+
+  const desdeVal = autosDesde.value;
+  const hastaVal = autosHasta.value;
+
+  if(!desdeVal && !hastaVal){
+    autosBody.innerHTML = '<tr><td colspan="4" class="empty-hint">Selecciona un intervalo de fechas para calcular el total de autos.</td></tr>';
+    autosTotalPill.textContent = "0";
+    ultimoAutosExport = [];
+    return;
+  }
+
+  const desdeDate = desdeVal ? parseFechaPdfADate(desdeVal) : null;
+  const hastaDate = hastaVal ? parseFechaPdfADate(hastaVal) : null;
+  const usuarioVal = autosUsuario.value;
+  const codigosVigentes = getCodigosAutos();
+
+  const registrosFiltrados = Object.values(concentradoAutosCache || {}).filter(row=>{
+    if(!row.cod || row.cod === "-") return false;
+    if(!codigosVigentes.includes(row.cod)) return false;
+    const dt = parseFechaPdfADate(row.fechaPdf);
+    if(!dt) return false;
+    if(desdeDate && dt < desdeDate) return false;
+    if(hastaDate && dt > hastaDate) return false;
+    if(modo === "1" && usuarioVal && (row.usuario||"") !== usuarioVal) return false;
+    if(!msAutos.match(row.sucursalPdf||"")) return false;
+    return true;
+  });
+
+  if(registrosFiltrados.length === 0){
+    autosBody.innerHTML = '<tr><td colspan="4" class="empty-hint">Ningún registro coincide con el intervalo seleccionado.</td></tr>';
+    autosTotalPill.textContent = "0";
+    ultimoAutosExport = [];
+    return;
+  }
+
+  // Agrupa por (Usuario o Sucursal PDF) + Cod, sumando "Ctd".
+  const grupos = {};
+  registrosFiltrados.forEach(row=>{
+    const valorCampo = row[campo] || "";
+    const key = valorCampo + "||" + (row.cod||"");
+    if(!grupos[key]){
+      grupos[key] = { valor: valorCampo, cod: row.cod||"", descripcion: row.descripcion||"", ctd: 0 };
+    }
+    grupos[key].ctd += parseNumero(row.ctd);
+    if(!grupos[key].descripcion && row.descripcion) grupos[key].descripcion = row.descripcion;
+  });
+
+  const gruposArr = Object.values(grupos).sort((a,b)=>
+    a.valor.localeCompare(b.valor,'es') || String(a.cod).localeCompare(String(b.cod),'es',{numeric:true})
+  );
+
+  // Agrupa (ya ordenado) por el valor de campo, para mostrar un encabezado con subtotal.
+  const gruposValor = [];
+  gruposArr.forEach(g=>{
+    let grupo = gruposValor[gruposValor.length - 1];
+    if(!grupo || grupo.valor !== g.valor){
+      grupo = { valor: g.valor, filas: [], subtotal: 0 };
+      gruposValor.push(grupo);
+    }
+    grupo.filas.push(g);
+    grupo.subtotal += g.ctd;
+  });
+
+  autosBody.innerHTML = "";
+  let total = 0;
+  const filasExport = [];
+
+  gruposValor.forEach(grupo=>{
+    total += grupo.subtotal;
+
+    const trHeader = document.createElement("tr");
+    trHeader.className = "usuario-header";
+    trHeader.innerHTML = `<td colspan="4">
+      <div class="usuario-header-inner">
+        <span class="usuario-header-name">
+          <span class="ico-user"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></span>
+          ${escapeHtml(grupo.valor || vacio)}
+        </span>
+        <span class="usuario-header-sub">Subtotal: ${grupo.subtotal}</span>
+      </div>
+    </td>`;
+    autosBody.appendChild(trHeader);
+
+    grupo.filas.forEach(f=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(grupo.valor || vacio)}</td>
+        <td class="code">${escapeHtml(f.cod)}</td>
+        <td class="truncate" title="${escapeHtml(f.descripcion)}">${escapeHtml(f.descripcion)}</td>
+        <td class="num">${f.ctd}</td>
+      `;
+      autosBody.appendChild(tr);
+      filasExport.push({
+        [etiqueta]: grupo.valor,
+        Cod: f.cod,
+        Descripcion: f.descripcion,
+        Ctd: f.ctd,
+        Tipo: "Individual"
+      });
+    });
+
+    filasExport.push({
+      [etiqueta]: grupo.valor, Cod: "", Descripcion: "", Ctd: grupo.subtotal, Tipo: "Subtotal " + (grupo.valor || vacio)
+    });
+  });
+
+  const trTotal = document.createElement("tr");
+  trTotal.className = "usuario-header";
+  trTotal.innerHTML = `<td colspan="3" style="text-align:right;font-family:var(--font-display);font-weight:700;letter-spacing:0.4px;color:var(--primary-dark);text-transform:uppercase;">TOTAL</td><td class="num" style="font-family:var(--font-mono);font-weight:700;color:var(--accent);">${total}</td>`;
+  autosBody.appendChild(trTotal);
+
+  filasExport.push({ [etiqueta]: "", Cod: "", Descripcion: "", Ctd: total, Tipo: "TOTAL" });
+
+  ultimoAutosExport = filasExport;
+  autosTotalPill.textContent = total.toString();
+}
+
+db.ref("concentradoAutos").on("value", snap=>{
+  concentradoAutosCache = snap.val() || {};
+  if(typeof poblarFechasEliminarRegistros === "function") poblarFechasEliminarRegistros();
+  renderTotalAutos();
+  if(typeof renderParametroMeta === "function") renderParametroMeta();
+});
+
+let concentradoMetaCache = {};
+db.ref("concentradoMeta").on("value", snap=>{
+  concentradoMetaCache = snap.val() || {};
+  if(typeof poblarFechasEliminarRegistros === "function") poblarFechasEliminarRegistros();
+  if(typeof renderParametroMeta === "function") renderParametroMeta();
+});
+
+[autosModo, autosDesde, autosHasta, autosUsuario, autosSucursal].forEach(sel=>{
+  sel.addEventListener("change", ()=>{
+    renderTotalAutos();
+    if(typeof renderParametroMeta === "function") renderParametroMeta();
+  });
+});
+
+document.getElementById("btnLimpiarAutos").addEventListener("click", ()=>{
+  autosDesde.value = "";
+  autosHasta.value = "";
+  autosUsuario.value = "";
+  msAutos.clear(true);
+  renderTotalAutos();
+  if(typeof renderParametroMeta === "function") renderParametroMeta();
+});
+
+/* ---------- Parámetro meta (metas por usuario, códigos y precios) ---------- */
+function formatearAutosMeta(n){
+  if(!isFinite(n)) return "0";
+  const rounded = Math.round(n * 1000) / 1000;
+  return rounded.toString();
+}
+
+function calcularSubtotalAutosUsuario(usuario, desdeDate, hastaDate, sucursalMs){
+  const codigosVigentes = getCodigosAutos();
+  let total = 0;
+  Object.values(concentradoAutosCache || {}).forEach(row=>{
+    if(!row.cod || row.cod === "-") return;
+    if(!codigosVigentes.includes(row.cod)) return;
+    const dt = parseFechaPdfADate(row.fechaPdf);
+    if(!dt) return;
+    if(desdeDate && dt < desdeDate) return;
+    if(hastaDate && dt > hastaDate) return;
+    if((row.usuario||"") !== usuario) return;
+    if(sucursalMs && !sucursalMs.match(row.sucursalPdf||"")) return;
+    total += parseNumero(row.ctd);
+  });
+  return total;
+}
+
+let ultimoMetaExport = null;
+
+function poblarFiltrosMeta(){
+  const selDesde = document.getElementById("metaDesde");
+  const selHasta = document.getElementById("metaHasta");
+  const selUsuario = document.getElementById("metaUsuario");
+  if(!selDesde || !selHasta || !selUsuario) return;
+  refrescarSucursalesMulti();
+  const fechasMap = new Map();
+  const usuariosSet = new Set();
+  [concentradoCache, concentradoAutosCache, concentradoMetaCache].forEach(c=>{
+    Object.values(c || {}).forEach(row=>{
+      if(row.fechaPdf){
+        const dt = parseFechaPdfADate(row.fechaPdf);
+        if(dt) fechasMap.set(row.fechaPdf, dt);
+      }
+      if(row.usuario) usuariosSet.add(row.usuario);
+    });
+  });
+  const ordenadas = Array.from(fechasMap.entries()).sort((a,b)=> a[1]-b[1]).map(e=>e[0]);
+  [selDesde, selHasta].forEach(sel=>{
+    const actual = sel.value;
+    const placeholder = sel.options[0];
+    sel.innerHTML = "";
+    sel.appendChild(placeholder);
+    ordenadas.forEach(f=>{
+      const opt = document.createElement("option");
+      opt.value = f;
+      opt.textContent = f;
+      sel.appendChild(opt);
+    });
+    if(Array.from(sel.options).some(o=>o.value===actual)) sel.value = actual;
+  });
+  poblarSelectFiltro(selUsuario, usuariosSet, "Todos los usuarios");
+}
+
+function renderParametroMeta(){
+  const cont = document.getElementById("paramMetaContenido");
+  const hint = document.getElementById("paramMetaHint");
+  if(!cont || !hint) return;
+
+  poblarFiltrosMeta();
+
+  const desdeVal = document.getElementById("metaDesde").value;
+  const hastaVal = document.getElementById("metaHasta").value;
+  const usuarioSel = document.getElementById("metaUsuario").value;
+
+  if(!desdeVal && !hastaVal && !usuarioSel && msMeta.selected.size === 0){
+    cont.style.display = "none";
+    hint.style.display = "";
+    hint.textContent = "MODALIDAD 1. Selecciona un intervalo de fechas o un usuario para ver las metas.";
+    ultimoMetaExport = null;
+    return;
+  }
+
+  hint.style.display = "none";
+  cont.style.display = "";
+
+  const desdeDate = desdeVal ? parseFechaPdfADate(desdeVal) : null;
+  const hastaDate = hastaVal ? parseFechaPdfADate(hastaVal) : null;
+  const modoTodos = !usuarioSel;
+
+  // Niveles de meta (Parámetro).
+  const parametros = getParametros();
+  const calcTiers = subtotal => parametros.map(p=>({
+    key: p.key,
+    descripcion: p.descripcion,
+    autosPorServicio: p.autosPorServicio,
+    precio: p.precio,
+    autosMeta: p.autosPorServicio > 0 ? (subtotal / p.autosPorServicio) : 0
+  }));
+
+  // Códigos meta: mapa de código individual -> {precioBase, precioFijo}
+  const codigoInfoMap = {};
+  getCodigosMetaList().forEach(c=>{
+    c.codigo.split(",").map(s=>s.trim()).filter(Boolean).forEach(cod=>{
+      codigoInfoMap[cod] = { precioBase: c.precioBase, precioFijo: c.precioFijo };
+    });
+  });
+  const codigosVigentesMeta = Object.keys(codigoInfoMap);
+
+  const registros = Object.values(concentradoMetaCache || {}).filter(row=>{
+    if(!row.cod || row.cod === "-") return false;
+    if(!codigosVigentesMeta.includes(row.cod)) return false;
+    const dt = parseFechaPdfADate(row.fechaPdf);
+    if(!dt) return false;
+    if(desdeDate && dt < desdeDate) return false;
+    if(hastaDate && dt > hastaDate) return false;
+    if(usuarioSel && (row.usuario||"") !== usuarioSel) return false;
+    if(!msMeta.match(row.sucursalPdf||"")) return false;
+    return true;
+  });
+
+  const registrosPorUsuario = {};
+  registros.forEach(row=>{
+    const u = row.usuario||"";
+    (registrosPorUsuario[u] = registrosPorUsuario[u] || []).push(row);
+  });
+  const usuarios = modoTodos
+    ? Object.keys(registrosPorUsuario).sort((a,b)=> a.localeCompare(b,'es',{numeric:true}))
+    : [usuarioSel];
+
+  // Cálculo por usuario: un renglón por extracción; la meta se evalúa con el total del usuario.
+  const bloques = usuarios.map(usuario=>{
+    const subtotal = calcularSubtotalAutosUsuario(usuario, desdeDate, hastaDate, msMeta);
+    const tiers = calcTiers(subtotal);
+    const filas = (registrosPorUsuario[usuario] || []).map(row=>({
+      cod: row.cod,
+      descripcion: row.descripcion||"",
+      ctd: parseNumero(row.ctd),
+      fecha: row.fechaPdf||"",
+      sucursal: row.sucursalPdf||"",
+      usuarioPdf: row.usuarioPdf||"",
+      usuario: row.usuario||""
+    })).sort((x,y)=>{
+      const c = String(x.cod).localeCompare(String(y.cod), 'es', {numeric:true});
+      if(c) return c;
+      const dx = parseFechaPdfADate(x.fecha), dy = parseFechaPdfADate(y.fecha);
+      return (dx && dy) ? dx - dy : 0;
+    });
+    const totalCantidad = filas.reduce((sum,f)=> sum + f.ctd, 0);
+
+    // Meta alcanzada: la de mayor "Autos meta" (más exigente) que sí se cumple.
+    const tiersOrdenados = tiers.slice().sort((x,y)=> y.autosMeta - x.autosMeta);
+    let tierAlcanzado = null;
+    for(const t of tiersOrdenados){
+      if(t.autosMeta > 0 && totalCantidad >= t.autosMeta){ tierAlcanzado = t; break; }
+    }
+
+    let totalPagar = 0;
+    filas.forEach(f=>{
+      const info = codigoInfoMap[f.cod] || { precioBase: 0, precioFijo: null };
+      const tieneFijo = info.precioFijo !== null && info.precioFijo !== undefined;
+      f.tieneFijo = tieneFijo;
+      f.info = info;
+      f.baseVal = tieneFijo ? info.precioFijo : info.precioBase;
+      let precioAplicado;
+      if(tieneFijo) precioAplicado = info.precioFijo;
+      else if(tierAlcanzado) precioAplicado = parseNumero(tierAlcanzado.precio);
+      else precioAplicado = info.precioBase;
+      f.monto = f.ctd * precioAplicado;
+      totalPagar += f.monto;
+    });
+
+    return {
+      usuario, subtotal, tiers, filas, totalCantidad, totalPagar,
+      // META = AUTOS / CANTIDAD DE SERVICIOS
+      metaRatio: totalCantidad > 0 ? (subtotal / totalCantidad) : 0,
+      tierAlcanzado,
+      metaAlcanzada: tierAlcanzado ? tierAlcanzado.descripcion : "BASE"
+    };
+  });
+
+  const totalGeneral = bloques.reduce((sum,b)=> sum + b.totalPagar, 0);
+  const tiersCols = bloques.length ? bloques[0].tiers : calcTiers(0);
+  const nCols = 8 + tiersCols.length;
+
+  // Tarjetas Usuario/Subtotal y tabla de niveles: solo cuando se elige un usuario.
+  document.getElementById("paramMetaResumenCards").style.display = modoTodos ? "none" : "flex";
+  document.getElementById("paramMetaTiersWrap").style.display = modoTodos ? "none" : "";
+  if(!modoTodos){
+    const b0 = bloques[0];
+    document.getElementById("paramMetaUsuario").textContent = usuarioSel;
+    document.getElementById("paramMetaSubtotal").textContent = b0.subtotal.toString();
+    const tiersBody = document.getElementById("paramMetaTiersBody");
+    tiersBody.innerHTML = "";
+    if(b0.tiers.length === 0){
+      tiersBody.innerHTML = '<tr><td colspan="4" class="empty-hint">Agrega renglones en "Parámetro" (Configuración) para ver las metas.</td></tr>';
+    } else {
+      b0.tiers.forEach(t=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(t.descripcion)}</td>
+          <td class="num">${t.autosPorServicio}</td>
+          <td class="num">${formatearAutosMeta(t.autosMeta)}</td>
+          <td class="num">${formatoMoneda(t.precio || 0)}</td>
+        `;
+        tiersBody.appendChild(tr);
+      });
+    }
+  }
+
+  const headTr = document.querySelector("#paramMetaDetalleHead tr");
+  const etiquetaMetaCol = modoTodos
+    ? "Monto"
+    : (bloques[0].tierAlcanzado ? ("Meta alcanzada: " + bloques[0].tierAlcanzado.descripcion) : "Meta alcanzada (BASE)");
+  headTr.innerHTML = `<th class="pdf-fecha">Fecha PDF</th><th class="pdf-suc">Sucursal PDF</th><th class="pdf-usr">Usuario PDF</th><th>Código</th><th>Concepto</th><th class="num">Cantidad</th><th class="num">Base</th>` +
+    tiersCols.map(t=> `<th class="num">${escapeHtml(t.descripcion)}</th>`).join("") +
+    `<th class="num">${escapeHtml(etiquetaMetaCol)}</th>`;
+
+  const body = document.getElementById("paramMetaDetalleBody");
+  body.innerHTML = "";
+  const hayFilas = bloques.some(b=> b.filas.length > 0);
+
+  if(!hayFilas){
+    body.innerHTML = `<tr><td colspan="${nCols}" class="empty-hint">No hay registros de "Código meta" ${modoTodos ? "en" : "para este usuario en"} el intervalo seleccionado.</td></tr>`;
+  } else {
+    const celdaPdf = v=> `<td class="pdf-cell" title="${escapeHtml(v)}">${escapeHtml(v||"—")}</td>`;
+    bloques.forEach(b=>{
+      if(b.filas.length === 0) return;
+
+      if(modoTodos){
+        const trH = document.createElement("tr");
+        trH.className = "usuario-header";
+        trH.innerHTML = `<td colspan="${nCols}">
+          <div class="usuario-header-inner">
+            <span class="usuario-header-name">
+              <span class="ico-user"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></span>
+              ${escapeHtml(b.usuario || "Sin usuario")}
+            </span>
+            <span class="usuario-header-sub">AUTOS: ${b.subtotal} · META ALCANZADA: ${escapeHtml(b.metaAlcanzada)}</span>
+          </div>
+        </td>`;
+        body.appendChild(trH);
+      }
+
+      b.filas.forEach(f=>{
+        let tds = celdaPdf(f.fecha) + celdaPdf(f.sucursal) + celdaPdf(f.usuarioPdf) +
+          `<td class="code">${escapeHtml(f.cod)}</td><td class="truncate" title="${escapeHtml(f.descripcion)}">${escapeHtml(f.descripcion)}</td><td class="num">${f.ctd}</td><td class="num">${formatoMoneda(f.baseVal)}</td>`;
+        b.tiers.forEach(t=>{
+          const valorCol = f.tieneFijo ? f.info.precioFijo : parseNumero(t.precio);
+          tds += `<td class="num">${formatoMoneda(valorCol)}</td>`;
+        });
+        tds += `<td class="num" style="font-weight:700;color:var(--accent);">${formatoMoneda(f.monto)}</td>`;
+        const tr = document.createElement("tr");
+        tr.innerHTML = tds;
+        body.appendChild(tr);
+      });
+
+      // RESUMEN: Concepto / Cantidad (el valor va en la columna "Cantidad").
+      const trRes = document.createElement("tr");
+      trRes.className = "combo-sep";
+      trRes.innerHTML = `<td colspan="${nCols}">RESUMEN${modoTodos ? " · " + escapeHtml(b.usuario || "") : ""}</td>`;
+      body.appendChild(trRes);
+      const estiloEtq = "text-align:right;font-family:var(--font-display);font-weight:700;letter-spacing:0.4px;color:var(--primary-dark);text-transform:uppercase;";
+      [
+        ["CANTIDAD DE SERVICIOS", String(b.totalCantidad), false],
+        ["AUTOS", String(b.subtotal), false],
+        ["META", formatearAutosMeta(b.metaRatio), false],
+        ["META ALCANZADA", escapeHtml(b.metaAlcanzada), false],
+        ["TOTAL", formatoMoneda(b.totalPagar), true]
+      ].forEach(([etq, val, esTotal])=>{
+        const trR = document.createElement("tr");
+        trR.className = "usuario-header";
+        trR.innerHTML = `<td colspan="5" style="${estiloEtq}">${etq}</td><td class="num" style="font-family:var(--font-mono);font-weight:700;${esTotal ? "color:var(--accent);" : ""}">${val}</td><td colspan="${nCols - 6}"></td>`;
+        body.appendChild(trR);
+      });
+    });
+
+    if(modoTodos && bloques.filter(b=> b.filas.length).length > 1){
+      const trG = document.createElement("tr");
+      trG.className = "usuario-header";
+      trG.innerHTML = `<td colspan="${nCols - 1}" style="text-align:right;font-family:var(--font-display);font-weight:700;letter-spacing:0.4px;color:var(--primary-dark);text-transform:uppercase;">TOTAL GENERAL</td><td class="num" style="font-family:var(--font-mono);font-weight:700;color:var(--accent);">${formatoMoneda(totalGeneral)}</td>`;
+      body.appendChild(trG);
+    }
+  }
+
+  document.getElementById("paramMetaTotalPill").textContent = formatoMoneda(totalGeneral);
+
+  ultimoMetaExport = { usuarioSel, bloques, totalGeneral };
+}
+
+["metaDesde","metaHasta","metaUsuario","metaSucursal"].forEach(id=>{
+  document.getElementById(id).addEventListener("change", renderParametroMeta);
+});
+
+/* ---------- Exportar a Excel ---------- */
+function descargarExcel(filas, nombreHoja, nombreArchivo){
+  if(!filas || filas.length === 0){
+    alert("No hay datos para exportar. Ajusta los filtros e inténtalo de nuevo.");
+    return;
+  }
+  const hoja = XLSX.utils.json_to_sheet(filas);
+  const libro = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(libro, hoja, nombreSanitizadoHoja(nombreHoja));
+  XLSX.writeFile(libro, nombreArchivo);
+}
+
+function nombreSanitizadoHoja(nombre){
+  return String(nombre).replace(/[\\\/\?\*\[\]:]/g, "").substring(0,31);
+}
+
+function fechaParaArchivo(){
+  const d = new Date();
+  const pad = n=> String(n).padStart(2,"0");
+  return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+}
+
+document.getElementById("btnExportRegistros").addEventListener("click", ()=>{
+  const filas = (ultimoRegistrosFiltrados||[]).map(row=>({
+    "Fecha PDF": row.fechaPdf || "",
+    "Sucursal PDF": row.sucursalPdf || "",
+    "Usuario PDF": row.usuarioPdf || "",
+    "Usuario": row.usuario || "",
+    "Cod": row.cod || "",
+    "Descripción": row.descripcion || "",
+    "Ctd": parseNumero(row.ctd),
+    "Total": parseNumero(row.total),
+    "PDF": row.pdfName || ""
+  }));
+  descargarExcel(filas, "Registros extraidos", `Registros_extraidos_${fechaParaArchivo()}.xlsx`);
+});
+
+document.getElementById("btnExportPago").addEventListener("click", ()=>{
+  descargarExcel(ultimoPagoExport, "Pago de comisiones", `Pago_de_comisiones_${fechaParaArchivo()}.xlsx`);
+});
+
+document.getElementById("btnExportPagoTec").addEventListener("click", ()=>{
+  descargarExcel(ultimoPagoTecExport, "Comisiones de tecnicos", `Comisiones_de_tecnicos_${fechaParaArchivo()}.xlsx`);
+});
+
+document.getElementById("btnExportMeta").addEventListener("click", ()=>{
+  const d = ultimoMetaExport;
+  const bloques = d ? d.bloques.filter(b=> b.filas.length > 0) : [];
+  if(bloques.length === 0){
+    alert("No hay datos para exportar. Ajusta los filtros e inténtalo de nuevo.");
+    return;
+  }
+  // Una sola tabla continua (sin renglones en blanco): el Usuario se repite hacia abajo
+  // hasta el renglón de "Meta alcanzada:" de cada usuario.
+  const aoa = [["Fecha PDF", "Sucursal PDF", "Usuario PDF", "Usuario", "Código", "Concepto", "Cantidad"]];
+  const filasMoneda = [];   // números de fila (base 1) cuyo valor en la columna G es dinero
+
+  bloques.forEach(b=>{
+    const u = b.usuario;
+    b.filas.forEach(f=> aoa.push([f.fecha, f.sucursal, f.usuarioPdf, u, f.cod, f.descripcion, f.ctd]));
+    // RESUMEN al final de la columna "Concepto" (F); los valores quedan en "Cantidad" (G).
+    aoa.push(["", "", "", u, "", "CANTIDAD DE SERVICIOS", b.totalCantidad]);
+    aoa.push(["", "", "", u, "", "AUTOS", b.subtotal]);
+    aoa.push(["", "", "", u, "", "META", Math.round(b.metaRatio * 1000) / 1000]);
+    aoa.push(["", "", "", u, "", "META ALCANZADA", b.metaAlcanzada]);
+    aoa.push(["", "", "", u, "", "TOTAL", b.totalPagar]);
+    filasMoneda.push(aoa.length);
+  });
+
+  if(bloques.length > 1){
+    aoa.push(["", "", "", "TODOS", "", "TOTAL GENERAL", d.totalGeneral]);
+    filasMoneda.push(aoa.length);
+  }
+
+  const hoja = XLSX.utils.aoa_to_sheet(aoa);
+  hoja["!cols"] = [{wch:14},{wch:18},{wch:16},{wch:16},{wch:12},{wch:40},{wch:16}];
+  filasMoneda.forEach(r=>{
+    const c = hoja["G" + r];
+    if(c){ c.t = "n"; c.z = '"$"#,##0.00'; }
+  });
+  const libro = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(libro, hoja, "Resumen META");
+  const nombreUsuario = d.usuarioSel ? String(d.usuarioSel).replace(/[^\w\-]+/g, "_") : "Todos";
+  XLSX.writeFile(libro, `Resumen_META_${nombreUsuario}_${fechaParaArchivo()}.xlsx`);
+});
+
+document.getElementById("btnExportPF").addEventListener("click", ()=>{
+  descargarExcel(ultimoPFExport, "Precios fijos", `Precios_fijos_${fechaParaArchivo()}.xlsx`);
+});
+
+document.getElementById("btnExportAutos").addEventListener("click", ()=>{
+  descargarExcel(ultimoAutosExport, "Total de autos", `Total_de_autos_${fechaParaArchivo()}.xlsx`);
+});
+
+/* ---------- Botones "BORRAR" (borran todos los registros de una tabla) ---------- */
+function solicitarBorrarConcentrado(origen){
+  abrirModalAutorizar(
+    `Esto borrará"${origen}".`,
+    async ()=>{
+      try{
+        await db.ref("concentrado").remove();
+      }catch(err){
+        console.error(err);
+        alert("No se pudieron borrar los registros.");
+      }
+    },
+    BORRAR_PASSWORD
+  );
+}
+
+function solicitarBorrarAutos(){
+  abrirModalAutorizar(
+    'Esto borrará TODOS los registros',
+    async ()=>{
+      try{
+        await db.ref("concentradoAutos").remove();
+      }catch(err){
+        console.error(err);
+        alert("No se pudieron borrar los registros.");
+      }
+    },
+    BORRAR_PASSWORD
+  );
+}
+
+document.getElementById("btnBorrarRegistros").addEventListener("click", ()=> solicitarBorrarConcentrado("Registros extraídos"));
+document.getElementById("btnBorrarPago").addEventListener("click", ()=> solicitarBorrarConcentrado("Pago de comisiones"));
+document.getElementById("btnBorrarPagoTec").addEventListener("click", ()=> solicitarBorrarConcentrado("Comisiones de técnicos"));
+document.getElementById("btnBorrarPF").addEventListener("click", ()=> solicitarBorrarConcentrado("Precios fijos"));
+document.getElementById("btnBorrarAutos").addEventListener("click", solicitarBorrarAutos);
+
+/* ---------- Eliminar PDF (por rango de fechas, conserva la info extraída) ---------- */
+const delPdfDesde = document.getElementById("delPdfDesde");
+const delPdfHasta = document.getElementById("delPdfHasta");
+const delPdfMsgEl = document.getElementById("delPdfMsg");
+const delPdfOverlay = document.getElementById("delPdfOverlay");
+const delPdfConfirmErr = document.getElementById("delPdfConfirmErr");
+let pendingRangoEliminarPdf = null;
+
+function showDelPdfMsg(text, type){
+  delPdfMsgEl.textContent = text;
+  delPdfMsgEl.className = "msg show " + type;
+}
+function clearDelPdfMsg(){
+  delPdfMsgEl.className = "msg";
+}
+
+function poblarFechasEliminarPdf(){
+  if(!delPdfDesde || !delPdfHasta) return;
+  const fechasMap = new Map();
+  Object.values(concentradoCache || {}).forEach(row=>{
+    if(!row.fechaPdf) return;
+    const dt = parseFechaPdfADate(row.fechaPdf);
+    if(dt) fechasMap.set(row.fechaPdf, dt);
+  });
+  const ordenadas = Array.from(fechasMap.entries()).sort((a,b)=> a[1]-b[1]).map(e=>e[0]);
+  [delPdfDesde, delPdfHasta].forEach(sel=>{
+    const actual = sel.value;
+    const placeholder = sel.options[0];
+    sel.innerHTML = "";
+    sel.appendChild(placeholder);
+    ordenadas.forEach(f=>{
+      const opt = document.createElement("option");
+      opt.value = f;
+      opt.textContent = f;
+      sel.appendChild(opt);
+    });
+    if(Array.from(sel.options).some(o=>o.value===actual)) sel.value = actual;
+  });
+}
+
+document.getElementById("btnEliminarPdfRango").addEventListener("click", ()=>{
+  clearDelPdfMsg();
+  const desde = delPdfDesde.value;
+  const hasta = delPdfHasta.value;
+  if(!desde || !hasta){
+    showDelPdfMsg("Selecciona la fecha inicial (\"Desde\") y la fecha final (\"Hasta\").", "err");
+    return;
+  }
+  const dtDesde = parseFechaPdfADate(desde);
+  const dtHasta = parseFechaPdfADate(hasta);
+  if(!dtDesde || !dtHasta || dtDesde > dtHasta){
+    showDelPdfMsg("El rango de fechas no es válido.", "err");
+    return;
+  }
+
+  pendingRangoEliminarPdf = { dtDesde, dtHasta, desde, hasta };
+  delPdfConfirmErr.textContent = "";
+  delPdfOverlay.classList.add("show");
+});
+
+document.getElementById("delPdfCancelBtn").addEventListener("click", ()=>{
+  delPdfOverlay.classList.remove("show");
+  pendingRangoEliminarPdf = null;
+});
+
+document.getElementById("delPdfAcceptBtn").addEventListener("click", async ()=>{
+  if(!pendingRangoEliminarPdf){ delPdfOverlay.classList.remove("show"); return; }
+  const { dtDesde, dtHasta } = pendingRangoEliminarPdf;
+  pendingRangoEliminarPdf = null;
+  delPdfOverlay.classList.remove("show");
+
+  const pdfIds = new Set();
+  [concentradoCache, typeof concentradoAutosCache !== "undefined" ? concentradoAutosCache : {}, typeof concentradoMetaCache !== "undefined" ? concentradoMetaCache : {}].forEach(cache=>{
+    Object.values(cache || {}).forEach(row=>{
+      if(!row.pdfId || !row.fechaPdf) return;
+      const dt = parseFechaPdfADate(row.fechaPdf);
+      if(dt && dt >= dtDesde && dt <= dtHasta) pdfIds.add(row.pdfId);
+    });
+  });
+
+  if(pdfIds.size === 0){
+    showDelPdfMsg("No se encontraron PDF guardados en ese rango de fechas.", "info");
+    return;
+  }
+
+  try{
+    showDelPdfMsg("Eliminando PDF…", "info");
+    const updates = {};
+    pdfIds.forEach(id=> updates[id] = null);
+    await db.ref("pdfs").update(updates);
+    showDelPdfMsg(`Se eliminaron ${pdfIds.size} PDF de ese rango. La información ya extraída se conservó en el Concentrado.`, "ok");
+  }catch(err){
+    console.error(err);
+    showDelPdfMsg("No se pudieron eliminar los PDF. Intenta de nuevo.", "err");
+  }
+});
+
+/* ---------- Eliminar Registros (PDF + registros de un rango de fechas) ---------- */
+const delRegDesde = document.getElementById("delRegDesde");
+const delRegHasta = document.getElementById("delRegHasta");
+const delRegMsgEl = document.getElementById("delRegMsg");
+const delRegOverlay = document.getElementById("delRegOverlay");
+const delRegConfirmDesc = document.getElementById("delRegConfirmDesc");
+let pendingRangoEliminarReg = null;
+
+function showDelRegMsg(text, type){
+  delRegMsgEl.textContent = text;
+  delRegMsgEl.className = "msg show " + type;
+}
+
+function cachesRegistros(){
+  return {
+    concentrado: concentradoCache || {},
+    concentradoAutos: (typeof concentradoAutosCache !== "undefined" ? concentradoAutosCache : {}) || {},
+    concentradoMeta: (typeof concentradoMetaCache !== "undefined" ? concentradoMetaCache : {}) || {}
+  };
+}
+
+function poblarFechasEliminarRegistros(){
+  if(!delRegDesde || !delRegHasta) return;
+  const fechasMap = new Map();
+  Object.values(cachesRegistros()).forEach(cache=>{
+    Object.values(cache).forEach(row=>{
+      if(!row.fechaPdf) return;
+      const dt = parseFechaPdfADate(row.fechaPdf);
+      if(dt) fechasMap.set(row.fechaPdf, dt);
+    });
+  });
+  const ordenadas = Array.from(fechasMap.entries()).sort((a,b)=> a[1]-b[1]).map(e=>e[0]);
+  [delRegDesde, delRegHasta].forEach(sel=>{
+    const actual = sel.value;
+    const placeholder = sel.options[0];
+    sel.innerHTML = "";
+    sel.appendChild(placeholder);
+    ordenadas.forEach(f=>{
+      const opt = document.createElement("option");
+      opt.value = f;
+      opt.textContent = f;
+      sel.appendChild(opt);
+    });
+    if(Array.from(sel.options).some(o=>o.value===actual)) sel.value = actual;
+  });
+}
+
+document.getElementById("btnEliminarRegRango").addEventListener("click", ()=>{
+  delRegMsgEl.className = "msg";
+  const desde = delRegDesde.value;
+  const hasta = delRegHasta.value;
+  if(!desde || !hasta){
+    showDelRegMsg("Selecciona la fecha inicial (\"Desde\") y la fecha final (\"Hasta\").", "err");
+    return;
+  }
+  const dtDesde = parseFechaPdfADate(desde);
+  const dtHasta = parseFechaPdfADate(hasta);
+  if(!dtDesde || !dtHasta || dtDesde > dtHasta){
+    showDelRegMsg("El rango de fechas no es válido.", "err");
+    return;
+  }
+  pendingRangoEliminarReg = { dtDesde, dtHasta, desde, hasta };
+  delRegConfirmDesc.textContent = `¿DESEA ELIMINAR LOS PDF Y TODOS LOS REGISTROS DEL ${desde} AL ${hasta}? ESTA ACCIÓN NO SE PUEDE DESHACER.`;
+  document.getElementById("delRegConfirmErr").textContent = "";
+  delRegOverlay.classList.add("show");
+});
+
+document.getElementById("delRegCancelBtn").addEventListener("click", ()=>{
+  delRegOverlay.classList.remove("show");
+  pendingRangoEliminarReg = null;
+});
+
+document.getElementById("delRegAcceptBtn").addEventListener("click", async ()=>{
+  if(!pendingRangoEliminarReg){ delRegOverlay.classList.remove("show"); return; }
+  const { dtDesde, dtHasta } = pendingRangoEliminarReg;
+  pendingRangoEliminarReg = null;
+  delRegOverlay.classList.remove("show");
+
+  // Registros dentro del rango (en las tres colecciones) y los PDF a los que pertenecen.
+  const porColeccion = {};
+  const pdfIds = new Set();
+  let totalRegistros = 0;
+  Object.entries(cachesRegistros()).forEach(([nombre, cache])=>{
+    const updates = {};
+    Object.entries(cache).forEach(([key, row])=>{
+      if(!row || !row.fechaPdf) return;
+      const dt = parseFechaPdfADate(row.fechaPdf);
+      if(!dt || dt < dtDesde || dt > dtHasta) return;
+      updates[key] = null;
+      totalRegistros++;
+      if(row.pdfId) pdfIds.add(row.pdfId);
+    });
+    porColeccion[nombre] = updates;
+  });
+
+  if(totalRegistros === 0 && pdfIds.size === 0){
+    showDelRegMsg("No se encontraron registros ni PDF en ese rango de fechas.", "info");
+    return;
+  }
+
+  try{
+    showDelRegMsg("Eliminando registros y PDF…", "info");
+    for(const [nombre, updates] of Object.entries(porColeccion)){
+      if(Object.keys(updates).length > 0) await db.ref(nombre).update(updates);
+    }
+    if(pdfIds.size > 0){
+      const updatesPdf = {};
+      pdfIds.forEach(id=> updatesPdf[id] = null);
+      await db.ref("pdfs").update(updatesPdf);
+    }
+    showDelRegMsg(`Se eliminaron ${totalRegistros} registros y ${pdfIds.size} PDF de ese rango.`, "ok");
+  }catch(err){
+    console.error(err);
+    showDelRegMsg("No se pudieron eliminar los registros. Intenta de nuevo.", "err");
+  }
+});
+
+/* ---------- Interactividad 3D (Bento tilt) ---------- */
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function attachTilt(el, max){
+  if(reduceMotion) return;
+  el.addEventListener('pointermove', e=>{
+    const r = el.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top) / r.height;
+    const rx = (0.5 - py) * max * 2;
+    const ry = (px - 0.5) * max * 2;
+    el.style.transform = `perspective(900px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+  });
+  el.addEventListener('pointerleave', ()=>{ el.style.transform = ''; });
+}
+document.querySelectorAll('.bento').forEach(el=>{
+  if(el.querySelector('.table-wrap')) return; // Las tarjetas con tablas quedan fijas, sin animación de inclinación
+  attachTilt(el, 3.5);
+});
+
+const heroBox = document.getElementById('heroBox');
+const heroMark = document.getElementById('heroMark');
+if(!reduceMotion && heroBox && heroMark){
+  heroBox.addEventListener('pointermove', e=>{
+    const r = heroBox.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top) / r.height;
+    heroMark.style.setProperty('--rx', `${(0.5 - py) * 24}deg`);
+    heroMark.style.setProperty('--ry', `${(px - 0.5) * 24}deg`);
+  });
+  heroBox.addEventListener('pointerleave', ()=>{
+    heroMark.style.setProperty('--rx', `8deg`);
+    heroMark.style.setProperty('--ry', `-8deg`);
+  });
+}
+</script>
+</body>
+</html>
